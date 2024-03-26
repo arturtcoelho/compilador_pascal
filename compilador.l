@@ -21,8 +21,8 @@
 #include "compilador.h"
 #include "compilador.tab.h"
 
-// #define IMPRIME(STR) {};
-#define IMPRIME(STR) printf("%s    # %s \n", STR, token);
+#define IMPRIME(STR) {};
+// #define IMPRIME(STR) printf("%s    # %s \n", STR, token);
 
 int nl = 1;
 
@@ -193,10 +193,24 @@ integer { simbolo = simb_integer;
 }
 
 
-bool { simbolo = simb_bool;
+boolean { simbolo = simb_bool;
         strncpy (token, yytext, TAM_TOKEN);
         IMPRIME("bool  ");
         return T_BOOL;
+}
+
+
+true { simbolo = simb_true;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("true  ");
+        return T_TRUE;
+}
+
+
+false { simbolo = simb_false;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("false  ");
+        return T_FALSE;
 }
 
 := { simbolo = simb_atribuicao;

@@ -16,6 +16,10 @@ t_pilha pilha_e;
 t_pilha pilha_t;
 t_pilha pilha_f;
 
+t_simbolo *simb_esquerda;
+
+char mepa_buffer[64];
+
 %}
 
 %token PROGRAM ABRE_PARENTESES FECHA_PARENTESES
@@ -25,7 +29,7 @@ t_pilha pilha_f;
 %token T_MAIS T_MENOS T_BARRA T_ASTERISCO T_DIV
 %token T_MENOR T_MAIOR T_MENORIGUAL T_MAIORIGUAL T_IGUAL T_DESIGUAL
 %token T_NOT T_AND T_OR
-%token T_INTEGER T_BOOL
+%token T_INTEGER T_BOOL T_TRUE T_FALSE
 
 %%
 
@@ -50,7 +54,8 @@ bloco       :
               }
 
               comando_composto
-              {printTabSimbolo();geraCodigoDmem(nivel_lexico);removeTabLex(nivel_lexico);}
+              { //printTabSimbolo();
+              geraCodigoDmem(nivel_lexico);removeTabLex(nivel_lexico);}
               ;
 
 parte_declara_vars  
@@ -64,8 +69,7 @@ declara_vars: declara_vars declara_var
 
 declara_var : {num_vars = 0;}
               lista_id_var DOIS_PONTOS tipo {updateTipoSimbolo(simbolo, num_vars);}
-              {printf("numvars: %d\n", num_vars);
-               geraCodigoAmem(num_vars);}
+              {geraCodigoAmem(num_vars);}
               PONTO_E_VIRGULA
 ;
 
@@ -96,30 +100,70 @@ comando        :
 ;
 
 comando_atribuicao : IDENT {
-      t_simbolo *s = buscaSimbolo(token);
-      if (!s) imprimeErro("Alvo da atribuição deve ser uma variavel simples");
+      simb_esquerda = buscaSimbolo(token);
+      if (!simb_esquerda) imprimeErro("Não existe o simbolo");
+      if (simb_esquerda->cat != simples) imprimeErro("Impossivel atribuir");
    } 
-   ATRIBUICAO expressao_aritmetica
+   ATRIBUICAO expressao
+   {
+      int t = desempilha(&pilha_e);
+      // printf("%d, %d\n", t, simb_esquerda->tipo);
+      if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
+      sprintf(mepa_buffer, "ARMZ %d, %d", simb_esquerda->lex, simb_esquerda->desl);
+      geraCodigo(NULL, mepa_buffer);
+   }
 ;
+
+expressao:
+   expressao_aritmetica |
+   expressao T_IGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMIG");
+   } | 
+   expressao T_DESIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMDG");
+   } | 
+   expressao T_MAIOR expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMMA");
+   } | 
+   expressao T_MENOR expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMME");
+   } | 
+   expressao T_MAIORIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMAG");
+   } | 
+   expressao T_MENORIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMEG");
+   } |
+   expressao T_AND expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CONJ");
+   } |
+   expressao T_OR expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("DISJ");
+   }| bool_val 
+         {empilha(&pilha_e, simb_bool);
+         geraCodigoBool(token);}
+;
+
+bool_val: T_TRUE | T_FALSE;
 
 expressao_aritmetica : E
 ;
 
 E:
-   E T_MAIS T {int t1 = desempilha(&pilha_e);
-               int t2 = desempilha(&pilha_t);
-               if (t1 == t2)
-                  empilha(&pilha_e, t1);
-               else
-                  imprimeErro("Erro tipos");
+   E T_MAIS T {comparaTipos(&pilha_e, &pilha_t);
+               geraCodigoSimples("SOMA");
                } 
    | E T_MENOS T 
-               {int t1 = desempilha(&pilha_e);
-               int t2 = desempilha(&pilha_t);
-               if (t1 == t2)
-                  empilha(&pilha_e, t1);
-               else
-                  imprimeErro("Erro tipos");
+               {comparaTipos(&pilha_e, &pilha_t);
+               geraCodigoSimples("SUBT");
                } 
    | T {
       int t = desempilha(&pilha_t);
@@ -129,19 +173,11 @@ E:
 
 T:
    T T_ASTERISCO F
-               {int t1 = desempilha(&pilha_t);
-               int t2 = desempilha(&pilha_f);
-               if (t1 == t2)
-                  empilha(&pilha_e, t1);
-               else
-                  imprimeErro("Erro tipos");
+               {comparaTipos(&pilha_t, &pilha_f);
+               geraCodigoSimples("MULT");
                } 
-   | T T_DIV F {int t1 = desempilha(&pilha_t);
-               int t2 = desempilha(&pilha_f);
-               if (t1 == t2)
-                  empilha(&pilha_e, t1);
-               else
-                  imprimeErro("Erro tipos");
+   | T T_DIV F {comparaTipos(&pilha_t, &pilha_f);
+               geraCodigoSimples("DIVI");
                } 
    | F {
       int t = desempilha(&pilha_f);
@@ -150,9 +186,18 @@ T:
 ;
 
 F:
-   NUMERO {empilha(&pilha_f, simb_integer);} |
-   IDENT |
-   ABRE_PARENTESES expressao_aritmetica FECHA_PARENTESES
+   NUMERO {
+         empilha(&pilha_f, simb_integer);
+         geraCodigoCrct(token);
+   }
+   | IDENT {
+      t_simbolo *id = buscaSimbolo(token);
+      if (!id) imprimeErro("Não existe o simbolo");
+      if (id->cat != simples) imprimeErro("Quero um val simples");
+      empilha(&pilha_f, id->tipo);
+      geraCodigoCrvl(id->lex, id->desl);
+   }
+   | ABRE_PARENTESES expressao_aritmetica FECHA_PARENTESES
     {
         int t = desempilha(&pilha_e);
         empilha(&pilha_f, t);

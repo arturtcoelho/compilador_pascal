@@ -19,7 +19,7 @@ int desempilha(t_pilha *pilha)
 
 void imprime_pilha(t_pilha *pilha)
 {
-    printf("Stack: - ");    
+    printf("Stack: %d ", pilha->tam);
     for (int i = 0; i < pilha->tam; i++) 
         printf("%d - ", pilha->vetor[i]);
     printf("\n");

@@ -3,6 +3,8 @@
 
 #define TAM_TOKEN 16
 
+#include "pilha.h"
+
 /* -------------------------------------------------------------------
  *            Arquivo: compilador.h
  * -------------------------------------------------------------------
@@ -27,7 +29,7 @@ typedef enum simbolos {
   simb_mais, simb_menos, simb_barra, simb_asterisco, simb_div,
   simb_menor, simb_maior, simb_menorigual, simb_maiorigual, simb_igual, simb_desigual, 
   simb_not, simb_and, simb_or,
-  simb_integer, simb_bool
+  simb_integer, simb_bool, simb_true, simb_false
 } simbolos;
 
 typedef enum tipo_simbolo {
@@ -60,6 +62,14 @@ extern int nl;
 void geraCodigo (char*, char*);
 void geraCodigoAmem(int);
 void geraCodigoDmem();
+void geraCodigoCrct(char*);
+void geraCodigoBool(char*);
+void geraCodigoCrvl(int, int);
+void geraCodigoSimples(char*);
+
+void comparaTipos(t_pilha*, t_pilha*);
+void comparaTiposBool(t_pilha*, t_pilha*);
+
 int imprimeErro ( char* erro );
 
 int yylex();

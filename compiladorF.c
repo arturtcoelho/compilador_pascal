@@ -56,3 +56,51 @@ void geraCodigoDmem(int lex) {
   if (n <=0) return;
   fprintf(fp, "     DMEM %d\n", n); fflush(fp);
 }
+
+void geraCodigoCrct(char* n)
+{
+  fprintf(fp, "     CRCT %s\n", n); fflush(fp);
+}
+
+void geraCodigoBool(char* cod)
+{
+  if (!strcmp(cod, "true")) {
+    fprintf(fp, "     CRCT 1\n"); fflush(fp);
+  } else {
+    fprintf(fp, "     CRCT 0\n"); fflush(fp);
+  }
+}
+
+
+void geraCodigoCrvl(int lex, int desl)
+{
+  fprintf(fp, "     CRVL %d, %d\n", lex, desl); fflush(fp);
+}
+
+void geraCodigoSimples(char* m)
+{
+  fprintf(fp, "     %s\n", m); fflush(fp);
+}
+
+void comparaTipos(t_pilha* a, t_pilha* b)
+{
+  int t1 = desempilha(a);
+  int t2 = desempilha(b);
+  // printf("%d, %d\n", t1, t2);
+  // printf("%s\n", token);
+  if (t1 == t2)
+    empilha(a, t1);
+  else
+    imprimeErro("Erro tipos");
+}
+
+void comparaTiposBool(t_pilha* a, t_pilha* b)
+{
+  int t1 = desempilha(a);
+  int t2 = desempilha(b);
+  // printf("%d, %d\n", t1, t2);
+  if (t1 == t2)
+    empilha(a, simb_bool);
+  else
+    imprimeErro("Erro tipos bool");
+}

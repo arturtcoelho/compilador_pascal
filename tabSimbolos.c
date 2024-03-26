@@ -36,7 +36,6 @@ void removeTabLex(int lex)
         count++;
     }
     tabSim.tam -= count;
-    printf("%d\n", tabSim.tam);
 }
 
 void updateTipoSimbolo(int simbolo, int n)
