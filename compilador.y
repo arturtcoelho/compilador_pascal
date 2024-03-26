@@ -107,7 +107,6 @@ comando_atribuicao : IDENT {
    ATRIBUICAO expressao
    {
       int t = desempilha(&pilha_e);
-      // printf("%d, %d\n", t, simb_esquerda->tipo);
       if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
       sprintf(mepa_buffer, "ARMZ %d, %d", simb_esquerda->lex, simb_esquerda->desl);
       geraCodigo(NULL, mepa_buffer);
@@ -118,38 +117,46 @@ expressao:
    expressao_aritmetica |
    expressao T_IGUAL expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("igual\n");
       geraCodigoSimples("CMIG");
    } | 
    expressao T_DESIGUAL expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("desigual\n");
       geraCodigoSimples("CMDG");
    } | 
    expressao T_MAIOR expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("maior\n");
       geraCodigoSimples("CMMA");
    } | 
    expressao T_MENOR expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("menor\n");
       geraCodigoSimples("CMME");
    } | 
    expressao T_MAIORIGUAL expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("maiorigual\n");
       geraCodigoSimples("CMAG");
    } | 
    expressao T_MENORIGUAL expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("menorigual\n");
       geraCodigoSimples("CMEG");
-   } |
-   expressao T_AND expressao_aritmetica {
+   } 
+   | expressao T_AND expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("and\n");
       geraCodigoSimples("CONJ");
    } |
    expressao T_OR expressao_aritmetica {
       comparaTiposBool(&pilha_e, &pilha_e);
+      // printf("or\n");
       geraCodigoSimples("DISJ");
-   }| bool_val 
-         {empilha(&pilha_e, simb_bool);
-         geraCodigoBool(token);}
+   }  | bool_val 
+          {empilha(&pilha_e, simb_bool);
+          geraCodigoBool(token);}
 ;
 
 bool_val: T_TRUE | T_FALSE;

@@ -8,12 +8,14 @@ void inicia_pilha(t_pilha *pilha)
 
 void empilha(t_pilha *pilha, int n)
 {
+    // printf("%d\n", n);
     pilha->tam++;
     pilha->vetor[pilha->tam] = n;
 }
 
 int desempilha(t_pilha *pilha)
 {
+    // printf("Desempilha: %d\n", pilha->vetor[pilha->tam]);
     return pilha->vetor[pilha->tam--];
 }
 
