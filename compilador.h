@@ -1,3 +1,8 @@
+#ifndef COMPILADOR
+#define COMPILADOR
+
+#define TAM_TOKEN 16
+
 /* -------------------------------------------------------------------
  *            Arquivo: compilador.h
  * -------------------------------------------------------------------
@@ -10,17 +15,32 @@
  * Tipos, protótipos e variáveis globais do compilador (via extern)
  *
  * ------------------------------------------------------------------- */
-
-#define TAM_TOKEN 16
+typedef char bool;
 
 typedef enum simbolos {
   simb_program, simb_var, simb_begin, simb_end,
   simb_identificador, simb_numero,
   simb_ponto, simb_virgula, simb_ponto_e_virgula, simb_dois_pontos,
   simb_atribuicao, simb_abre_parenteses, simb_fecha_parenteses,
+  simb_procedure, simb_function,
+  simb_while, simb_if, 
+  simb_mais, simb_menos, simb_barra, simb_asterisco, simb_div,
+  simb_menor, simb_maior, simb_menorigual, simb_maiorigual, simb_igual, simb_desigual, 
+  simb_not, simb_and, simb_or,
+  simb_integer, simb_bool
 } simbolos;
 
+typedef enum tipo_simbolo {
+  simples
+} t_categoria;
 
+
+typedef struct simbolo {
+    char nome[TAM_TOKEN];
+    int lex, desl;
+    t_categoria cat;
+    int tipo;
+} t_simbolo;
 
 /* -------------------------------------------------------------------
  * variáveis globais
@@ -38,5 +58,11 @@ extern int nl;
  * ------------------------------------------------------------------- */
 
 void geraCodigo (char*, char*);
+void geraCodigoAmem(int);
+void geraCodigoDmem();
+int imprimeErro ( char* erro );
+
 int yylex();
 void yyerror(const char *s);
+
+#endif

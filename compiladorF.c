@@ -16,7 +16,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "compilador.h"
-
+#include "tabSimbolos.h"
 
 /* -------------------------------------------------------------------
  *  variáveis globais
@@ -26,7 +26,8 @@ simbolos simbolo, relacao;
 char token[TAM_TOKEN];
 
 FILE* fp=NULL;
-void geraCodigo (char* rot, char* comando) {
+void geraCodigo (char* rot, char* comando) 
+{
 
   if (fp == NULL) {
     fp = fopen ("MEPA", "w");
@@ -42,4 +43,16 @@ void geraCodigo (char* rot, char* comando) {
 int imprimeErro ( char* erro ) {
   fprintf (stderr, "Erro na linha %d - %s\n", nl, erro);
   exit(-1);
+}
+
+void geraCodigoAmem(int n) 
+{
+  if (n <= 0) return;
+  fprintf(fp, "     AMEM %d\n", n); fflush(fp);
+}
+
+void geraCodigoDmem(int lex) {
+  int n = contaTabSimb(lex);
+  if (n <=0) return;
+  fprintf(fp, "     DMEM %d\n", n); fflush(fp);
 }

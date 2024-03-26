@@ -1,0 +1,5 @@
+*.o
+compilador.tab.* 
+lex.yy.c 
+compilador
+compilador.output

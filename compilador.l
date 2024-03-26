@@ -21,7 +21,7 @@
 #include "compilador.h"
 #include "compilador.tab.h"
 
-//#define IMPRIME(STR) {};
+// #define IMPRIME(STR) {};
 #define IMPRIME(STR) printf("%s    # %s \n", STR, token);
 
 int nl = 1;
@@ -70,6 +70,135 @@ end { simbolo = simb_end;
           return T_END;
  }
 
+procedure { simbolo = simb_procedure;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("procedure  ");
+          return T_PROCEDURE;
+ }
+
+function { simbolo = simb_function;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("function  ");
+          return T_FUNCTION;
+ }
+
+while { simbolo = simb_while;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("while  ");
+          return T_WHILE;
+ }
+
+if { simbolo = simb_if;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("if  ");
+        return T_IF;
+}
+
+
+\+ { simbolo = simb_mais;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("+  ");
+        return T_MAIS;
+}
+
+
+\- { simbolo = simb_menos;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("-  ");
+        return T_MENOS;
+}
+
+
+\* { simbolo = simb_asterisco;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("*  ");
+        return T_ASTERISCO;
+}
+
+
+\< { simbolo = simb_menor;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("<  ");
+        return T_MENOR;
+}
+
+
+\> { simbolo = simb_maior;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME(">  ");
+        return T_MAIOR;
+}
+
+
+\<= { simbolo = simb_menorigual;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("<=  ");
+        return T_MENORIGUAL;
+}
+
+
+\>= { simbolo = simb_maiorigual;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME(">=  ");
+        return T_MAIORIGUAL;
+}
+
+
+\= { simbolo = simb_igual;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("=  ");
+        return T_IGUAL;
+}
+
+
+\<> { simbolo = simb_desigual;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("<>  ");
+        return T_DESIGUAL;
+}
+
+
+div { simbolo = simb_div;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("div  ");
+        return T_DIV;
+}
+
+
+not { simbolo = simb_not;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("not  ");
+        return T_NOT;
+}
+
+
+and { simbolo = simb_and;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("and  ");
+        return T_AND;
+}
+
+
+or { simbolo = simb_or;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("or  ");
+        return T_OR;
+}
+
+
+integer { simbolo = simb_integer;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("integer  ");
+        return T_INTEGER;
+}
+
+
+bool { simbolo = simb_bool;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("bool  ");
+        return T_BOOL;
+}
+
 := { simbolo = simb_atribuicao;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" atribuicao  ");
@@ -117,6 +246,12 @@ end { simbolo = simb_end;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" ident  ");
           return IDENT;
+        }
+
+{numero} { simbolo = simb_numero;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME(" numero  ");
+          return NUMERO;
         }
 
 
