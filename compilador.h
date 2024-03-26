@@ -73,6 +73,7 @@ void geraCodigoRotulo(int);
 void geraCodigoDesvioF(int);
 void geraCodigoDesvioS(int);
 void geraWrite();
+void geraWriteConstante();
 
 void comparaTipos(t_pilha*, t_pilha*);
 void comparaTiposBool(t_pilha*, t_pilha*);

@@ -110,6 +110,12 @@ void geraWrite()
   geraCodigoSimples("IMPR");
 }
 
+void geraWriteConstante()
+{
+  geraCodigoCrct(token);
+  geraCodigoSimples("IMPR");
+}
+
 void comparaTipos(t_pilha* a, t_pilha* b)
 {
   int t1 = desempilha(a);

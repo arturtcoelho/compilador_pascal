@@ -103,13 +103,23 @@ varios_comandos : varios_comandos PONTO_E_VIRGULA comando |
 comando        : 
                comando_atribuicao
                | comando_while
+               | comando_if
                | leitura | escrita
+               | comando_composto
 ;
+
+comando_if: T_IF expressao {
+   pilha_rotulos+=2;
+   geraCodigoDesvioF(pilha_rotulos-1);
+} T_THEN comando {geraCodigoDesvioS(pilha_rotulos);geraCodigoRotulo(pilha_rotulos-1);} parte_else {geraCodigoRotulo(pilha_rotulos);pilha_rotulos-=2;}
+;
+
+parte_else : T_ELSE comando | %empty;
 
 comando_while : T_WHILE {pilha_rotulos+=2;geraCodigoRotulo(pilha_rotulos-1);} 
                expressao T_DO 
                {geraCodigoDesvioF(pilha_rotulos);}
-               comando_composto
+               comando
                {geraCodigoDesvioS(pilha_rotulos-1);
                geraCodigoRotulo(pilha_rotulos);
                pilha_rotulos-=2;}
@@ -238,12 +248,11 @@ leitura: T_READ ABRE_PARENTESES IDENT {
 escrita: T_WRITE ABRE_PARENTESES lista_write FECHA_PARENTESES
 ;
 
-lista_write: lista_write VIRGULA IDENT 
-   {geraWrite();}
-   | IDENT {
-   {geraWrite();}
-   }
+lista_write: lista_write VIRGULA parte_imprimivel 
+   | parte_imprimivel
 ;
+
+parte_imprimivel: IDENT {geraWrite();} | NUMERO {geraWriteConstante();};
 
 %%
 
