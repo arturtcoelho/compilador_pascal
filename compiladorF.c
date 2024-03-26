@@ -77,9 +77,37 @@ void geraCodigoCrvl(int lex, int desl)
   fprintf(fp, "     CRVL %d, %d\n", lex, desl); fflush(fp);
 }
 
+void geraCodigoArmz(int lex, int desl)
+{
+  fprintf(fp, "     ARMZ %d, %d\n", lex, desl); fflush(fp);
+}
+
 void geraCodigoSimples(char* m)
 {
   fprintf(fp, "     %s\n", m); fflush(fp);
+}
+
+void geraCodigoRotulo(int n)
+{
+  fprintf(fp, "R%02d: NADA\n", n); fflush(fp);
+}
+
+void geraCodigoDesvioF(int n)
+{
+  fprintf(fp, "     DSVF R%02d\n", n); fflush(fp);
+}
+
+void geraCodigoDesvioS(int n)
+{
+  fprintf(fp, "     DSVS R%02d\n", n); fflush(fp);
+}
+
+void geraWrite()
+{
+  t_simbolo * s = buscaSimbolo(token);
+  if (s->cat != simples) imprimeErro("Tentando ler valor em simbolo nao simples");
+  geraCodigoCrvl(s->lex, s->desl);
+  geraCodigoSimples("IMPR");
 }
 
 void comparaTipos(t_pilha* a, t_pilha* b)

@@ -88,12 +88,29 @@ while { simbolo = simb_while;
           return T_WHILE;
  }
 
+do { simbolo = simb_do;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("do  ");
+          return T_DO;
+ }
+
 if { simbolo = simb_if;
         strncpy (token, yytext, TAM_TOKEN);
         IMPRIME("if  ");
         return T_IF;
 }
 
+then { simbolo = simb_then;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("then  ");
+        return T_THEN;
+}
+
+else { simbolo = simb_else;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("else  ");
+        return T_ELSE;
+}
 
 \+ { simbolo = simb_mais;
         strncpy (token, yytext, TAM_TOKEN);
@@ -255,6 +272,18 @@ false { simbolo = simb_false;
           IMPRIME(" fecha_parenteses ");
           return FECHA_PARENTESES;
  }
+
+read { simbolo = simb_read;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("read  ");
+        return T_READ;
+}
+
+write { simbolo = simb_write;
+        strncpy (token, yytext, TAM_TOKEN);
+        IMPRIME("write  ");
+        return T_WRITE;
+}
 
 {ident} { simbolo = simb_identificador;
           strncpy (token, yytext, TAM_TOKEN);

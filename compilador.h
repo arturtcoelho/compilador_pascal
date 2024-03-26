@@ -25,11 +25,13 @@ typedef enum simbolos {
   simb_ponto, simb_virgula, simb_ponto_e_virgula, simb_dois_pontos,
   simb_atribuicao, simb_abre_parenteses, simb_fecha_parenteses,
   simb_procedure, simb_function,
-  simb_while, simb_if, 
+  simb_while, simb_do, 
+  simb_if, simb_else, simb_then,
   simb_mais, simb_menos, simb_barra, simb_asterisco, simb_div,
   simb_menor, simb_maior, simb_menorigual, simb_maiorigual, simb_igual, simb_desigual, 
   simb_not, simb_and, simb_or,
-  simb_integer, simb_bool, simb_true, simb_false
+  simb_integer, simb_bool, simb_true, simb_false,
+  simb_read, simb_write
 } simbolos;
 
 typedef enum tipo_simbolo {
@@ -65,7 +67,12 @@ void geraCodigoDmem();
 void geraCodigoCrct(char*);
 void geraCodigoBool(char*);
 void geraCodigoCrvl(int, int);
+void geraCodigoArmz(int, int);
 void geraCodigoSimples(char*);
+void geraCodigoRotulo(int);
+void geraCodigoDesvioF(int);
+void geraCodigoDesvioS(int);
+void geraWrite();
 
 void comparaTipos(t_pilha*, t_pilha*);
 void comparaTiposBool(t_pilha*, t_pilha*);

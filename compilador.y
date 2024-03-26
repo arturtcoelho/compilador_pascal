@@ -18,6 +18,8 @@ t_pilha pilha_f;
 
 t_simbolo *simb_esquerda;
 
+int pilha_rotulos = -1;
+
 char mepa_buffer[64];
 
 %}
@@ -25,11 +27,14 @@ char mepa_buffer[64];
 %token PROGRAM ABRE_PARENTESES FECHA_PARENTESES
 %token VIRGULA PONTO_E_VIRGULA DOIS_PONTOS PONTO
 %token T_BEGIN T_END VAR IDENT ATRIBUICAO NUMERO
-%token T_PROCEDURE T_FUNCTION T_WHILE T_IF
+%token T_PROCEDURE T_FUNCTION 
+%token T_WHILE T_DO 
+%token T_IF T_THEN T_ELSE
 %token T_MAIS T_MENOS T_BARRA T_ASTERISCO T_DIV
 %token T_MENOR T_MAIOR T_MENORIGUAL T_MAIORIGUAL T_IGUAL T_DESIGUAL
 %token T_NOT T_AND T_OR
 %token T_INTEGER T_BOOL T_TRUE T_FALSE
+%token T_READ T_WRITE
 
 %%
 
@@ -97,6 +102,17 @@ varios_comandos : varios_comandos PONTO_E_VIRGULA comando |
 
 comando        : 
                comando_atribuicao
+               | comando_while
+               | leitura | escrita
+;
+
+comando_while : T_WHILE {pilha_rotulos+=2;geraCodigoRotulo(pilha_rotulos-1);} 
+               expressao T_DO 
+               {geraCodigoDesvioF(pilha_rotulos);}
+               comando_composto
+               {geraCodigoDesvioS(pilha_rotulos-1);
+               geraCodigoRotulo(pilha_rotulos);
+               pilha_rotulos-=2;}
 ;
 
 comando_atribuicao : IDENT {
@@ -108,8 +124,7 @@ comando_atribuicao : IDENT {
    {
       int t = desempilha(&pilha_e);
       if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
-      sprintf(mepa_buffer, "ARMZ %d, %d", simb_esquerda->lex, simb_esquerda->desl);
-      geraCodigo(NULL, mepa_buffer);
+      geraCodigoArmz(simb_esquerda->lex, simb_esquerda->desl);
    }
 ;
 
@@ -157,6 +172,7 @@ expressao:
    }  | bool_val 
           {empilha(&pilha_e, simb_bool);
           geraCodigoBool(token);}
+   | ABRE_PARENTESES expressao FECHA_PARENTESES // TODO fix dirty fix
 ;
 
 bool_val: T_TRUE | T_FALSE;
@@ -209,6 +225,24 @@ F:
         int t = desempilha(&pilha_e);
         empilha(&pilha_f, t);
     }
+;
+
+leitura: T_READ ABRE_PARENTESES IDENT {
+   t_simbolo * s = buscaSimbolo(token);
+   if (s->cat != simples) imprimeErro("Tentando ler valor em simbolo nao simples");
+   geraCodigoSimples("LEIT");
+   geraCodigoArmz(s->lex, s->desl);} 
+   FECHA_PARENTESES
+;
+
+escrita: T_WRITE ABRE_PARENTESES lista_write FECHA_PARENTESES
+;
+
+lista_write: lista_write VIRGULA IDENT 
+   {geraWrite();}
+   | IDENT {
+   {geraWrite();}
+   }
 ;
 
 %%
