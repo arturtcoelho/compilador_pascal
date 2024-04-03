@@ -9,13 +9,22 @@ void inicia_tab()
     tabSim.tam = -1;
 }
 
-void addSimbolo(char* token, t_categoria ts, int desloc, int lex)
+void addSimboloSimples(char* token, int desloc, int lex)
 {
     tabSim.tam++;
     strncpy(tabSim.tokens[tabSim.tam].nome, token, TAM_TOKEN);
-    tabSim.tokens[tabSim.tam].cat = ts;
+    tabSim.tokens[tabSim.tam].cat = SIMPLES;
     tabSim.tokens[tabSim.tam].desl = desloc;
     tabSim.tokens[tabSim.tam].lex = lex;
+}
+
+void addSimboloProcedimento(char* token, int lex, int rot)
+{
+    tabSim.tam++;
+    strncpy(tabSim.tokens[tabSim.tam].nome, token, TAM_TOKEN);
+    tabSim.tokens[tabSim.tam].cat = PROCEDIMENTO;
+    tabSim.tokens[tabSim.tam].lex = lex;
+    tabSim.tokens[tabSim.tam].rotulo = rot;
 }
 
 t_simbolo* buscaSimbolo(char* token)
@@ -31,7 +40,7 @@ void removeTabLex(int lex)
 {
     int i = tabSim.tam;
     int count = 0;
-    while (i >= 0 && tabSim.tokens[i].lex == lex) {
+    while (i >= 0 && tabSim.tokens[i].lex == lex && tabSim.tokens[i].cat != PROCEDIMENTO) {
         i--;
         count++;
     }
@@ -47,18 +56,28 @@ void updateTipoSimbolo(int simbolo, int n)
 
 int contaTabSimb(int lex) 
 {
-    int i = tabSim.tam;
-    while (i >= 0 && tabSim.tokens[i].lex == lex) {
-        i--;
+    int count = 0;
+    for (int i = 0; i < tabSim.tam; i++) {
+        if (tabSim.tokens[i].lex == lex)
+            count++;        
     }
-    return tabSim.tam - i;
+    return count;
 }
 
 void printTabSimbolo()
 {
     printf("TabSimbolos: %d\n", tabSim.tam+1);
     for (int i = 0; i < tabSim.tam+1; i++) {
-        printf("%d: %s | %d, %d | cat: %d | type: %d\n", i, tabSim.tokens[i].nome, tabSim.tokens[i].lex, tabSim.tokens[i].desl, tabSim.tokens[i].cat, tabSim.tokens[i].tipo);
+        switch (tabSim.tokens[i].cat)
+        {
+        case SIMPLES:
+            printf("SIMP | %d: %s | %d, %d | type: %d\n", i, tabSim.tokens[i].nome, tabSim.tokens[i].lex, tabSim.tokens[i].desl, tabSim.tokens[i].tipo);
+            break;
+        case PROCEDIMENTO:  
+            printf("PROC | %d: %s | %d | R%02d\n", i, tabSim.tokens[i].nome, tabSim.tokens[i].lex, tabSim.tokens[i].rotulo);
+        default:
+            break;
+        }
     }
     
 }

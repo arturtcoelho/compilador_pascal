@@ -20,7 +20,7 @@ t_simbolo *simb_esquerda;
 
 int pilha_rotulos = -1;
 
-char mepa_buffer[64];
+char ident_save[64];
 
 %}
 
@@ -55,11 +55,9 @@ parte_opcional_program
 
 bloco       :
               parte_declara_vars
-              {
-              }
-
+              parte_declara_procedimetos
               comando_composto
-              { //printTabSimbolo();
+              { printTabSimbolo();
               geraCodigoDmem(nivel_lexico);removeTabLex(nivel_lexico);}
               ;
 
@@ -82,8 +80,8 @@ tipo        : T_INTEGER | T_BOOL
 ;
 
 lista_id_var: lista_id_var VIRGULA IDENT
-              {addSimbolo(token, simples, deslocamento, nivel_lexico);num_vars++; deslocamento++; }
-            | IDENT {addSimbolo(token, simples, deslocamento, nivel_lexico);num_vars++; deslocamento++;}
+              {addSimboloSimples(token, deslocamento, nivel_lexico);num_vars++; deslocamento++; }
+            | IDENT {addSimboloSimples(token, deslocamento, nivel_lexico);num_vars++; deslocamento++;}
 ;
 
 lista_idents: lista_idents VIRGULA IDENT
@@ -101,7 +99,7 @@ varios_comandos : varios_comandos PONTO_E_VIRGULA comando |
 ;
 
 comando        : 
-               comando_atribuicao
+               IDENT {strcpy(ident_save, token);} ident_solto
                | comando_while
                | comando_if
                | leitura | escrita
@@ -125,10 +123,15 @@ comando_while : T_WHILE {pilha_rotulos+=2;geraCodigoRotulo(pilha_rotulos-1);}
                pilha_rotulos-=2;}
 ;
 
-comando_atribuicao : IDENT {
+ident_solto: chamada_procedimento | 
+         comando_atribuicao 
+;
+
+comando_atribuicao: {
+      strcpy(token, ident_save);
       simb_esquerda = buscaSimbolo(token);
       if (!simb_esquerda) imprimeErro("Não existe o simbolo");
-      if (simb_esquerda->cat != simples) imprimeErro("Impossivel atribuir");
+      if (simb_esquerda->cat != SIMPLES) imprimeErro("Impossivel atribuir");
    } 
    ATRIBUICAO expressao
    {
@@ -138,66 +141,66 @@ comando_atribuicao : IDENT {
    }
 ;
 
-expressao:
-   expressao_aritmetica |
-   expressao T_IGUAL expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("igual\n");
-      geraCodigoSimples("CMIG");
-   } | 
-   expressao T_DESIGUAL expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("desigual\n");
-      geraCodigoSimples("CMDG");
-   } | 
-   expressao T_MAIOR expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("maior\n");
-      geraCodigoSimples("CMMA");
-   } | 
-   expressao T_MENOR expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("menor\n");
-      geraCodigoSimples("CMME");
-   } | 
-   expressao T_MAIORIGUAL expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("maiorigual\n");
-      geraCodigoSimples("CMAG");
-   } | 
-   expressao T_MENORIGUAL expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("menorigual\n");
-      geraCodigoSimples("CMEG");
-   } 
-   | expressao T_AND expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("and\n");
-      geraCodigoSimples("CONJ");
-   } |
-   expressao T_OR expressao_aritmetica {
-      comparaTiposBool(&pilha_e, &pilha_e);
-      // printf("or\n");
-      geraCodigoSimples("DISJ");
-   }  | bool_val 
-          {empilha(&pilha_e, simb_bool);
-          geraCodigoBool(token);}
-   | ABRE_PARENTESES expressao FECHA_PARENTESES // TODO fix dirty fix
+chamada_procedimento: {
+   strcpy(token, ident_save);
+   t_simbolo *id = buscaSimbolo(token);
+   if (!id) imprimeErro("Não existe o simbolo");
+   if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
+   geraCodigoChamaProc(id->rotulo, nivel_lexico);
+} parte_chamada_parametros
 ;
 
-bool_val: T_TRUE | T_FALSE;
+parte_chamada_parametros: ABRE_PARENTESES argumentos FECHA_PARENTESES 
+                              | %empty
+;
+
+argumentos: argumentos VIRGULA argumento | argumento
+;
+
+argumento: IDENT | expressao
+;
+
+expressao : expressao_aritmetica expressao_booleana | expressao_aritmetica;
+
+expressao_booleana:
+      T_IGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMIG");
+   } | 
+      T_DESIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMDG");
+   } | 
+      T_MAIOR expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMMA");
+   } | 
+      T_MENOR expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMME");
+   } | 
+      T_MAIORIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMAG");
+   } | 
+      T_MENORIGUAL expressao_aritmetica {
+      comparaTiposBool(&pilha_e, &pilha_e);
+      geraCodigoSimples("CMEG");
+   }
+;
+
 
 expressao_aritmetica : E
 ;
 
 E:
    E T_MAIS T {comparaTipos(&pilha_e, &pilha_t);
-               geraCodigoSimples("SOMA");
-               } 
-   | E T_MENOS T 
-               {comparaTipos(&pilha_e, &pilha_t);
-               geraCodigoSimples("SUBT");
-               } 
+               geraCodigoSimples("SOMA");} 
+   | E T_MENOS T {comparaTipos(&pilha_e, &pilha_t);
+               geraCodigoSimples("SUBT");} 
+   | E T_OR T {comparaTipos(&pilha_e, &pilha_t);
+               geraCodigoSimples("DISJ");
+   } 
    | T {
       int t = desempilha(&pilha_t);
       empilha(&pilha_e, t);
@@ -212,6 +215,10 @@ T:
    | T T_DIV F {comparaTipos(&pilha_t, &pilha_f);
                geraCodigoSimples("DIVI");
                } 
+   | T T_AND F {
+               comparaTipos(&pilha_t, &pilha_f);
+               geraCodigoSimples("CONJ");
+   }
    | F {
       int t = desempilha(&pilha_f);
       empilha(&pilha_t, t);
@@ -223,23 +230,69 @@ F:
          empilha(&pilha_f, simb_integer);
          geraCodigoCrct(token);
    }
+   | bool_val 
+          {empilha(&pilha_f, simb_bool);
+          geraCodigoBool(token);
+   }
    | IDENT {
       t_simbolo *id = buscaSimbolo(token);
       if (!id) imprimeErro("Não existe o simbolo");
-      if (id->cat != simples) imprimeErro("Quero um val simples");
+      if (id->cat != SIMPLES) imprimeErro("Quero um val simples");
       empilha(&pilha_f, id->tipo);
       geraCodigoCrvl(id->lex, id->desl);
    }
-   | ABRE_PARENTESES expressao_aritmetica FECHA_PARENTESES
+   | ABRE_PARENTESES expressao FECHA_PARENTESES
     {
         int t = desempilha(&pilha_e);
         empilha(&pilha_f, t);
     }
 ;
 
+bool_val: T_TRUE | T_FALSE;
+
+parte_declara_procedimetos: declaracao_procedimeto 
+                              | parte_declara_procedimetos declaracao_procedimeto 
+                              | %empty
+;
+
+declaracao_procedimeto: T_PROCEDURE IDENT 
+                        {
+                           nivel_lexico++;
+                           pilha_rotulos+=2;
+                           geraCodigoDesvioS(pilha_rotulos-1);
+                           geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
+                           addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+                        }
+                        opt_param_formal PONTO_E_VIRGULA 
+                        bloco
+                        {
+                           int num_param = 0;
+                           geraCodigoRetProc(nivel_lexico, num_param);
+                           geraCodigoRotulo(pilha_rotulos-1);
+                           
+                           nivel_lexico--;
+                        } 
+                        PONTO_E_VIRGULA
+;
+
+opt_param_formal: ABRE_PARENTESES lista_param_formal FECHA_PARENTESES 
+                     | %empty
+;
+
+lista_param_formal: lista_param_formal VIRGULA parte_param_formal
+                     | parte_param_formal
+;
+
+parte_param_formal: param_formal DOIS_PONTOS tipo
+;
+
+param_formal: VAR IDENT 
+               | IDENT
+;
+
 leitura: T_READ ABRE_PARENTESES IDENT {
    t_simbolo * s = buscaSimbolo(token);
-   if (s->cat != simples) imprimeErro("Tentando ler valor em simbolo nao simples");
+   if (s->cat != SIMPLES) imprimeErro("Tentando ler valor em simbolo nao simples");
    geraCodigoSimples("LEIT");
    geraCodigoArmz(s->lex, s->desl);} 
    FECHA_PARENTESES
