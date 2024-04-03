@@ -21,6 +21,9 @@ t_simbolo *simb_esquerda;
 int pilha_rotulos = -1;
 
 char ident_save[64];
+int num_param = 0;
+t_simbolo* guarda_simbolo;
+t_arg* arg;
 
 %}
 
@@ -261,12 +264,13 @@ declaracao_procedimeto: T_PROCEDURE IDENT
                            pilha_rotulos+=2;
                            geraCodigoDesvioS(pilha_rotulos-1);
                            geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
-                           addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+                           guarda_simbolo = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+                           guarda_simbolo->num_args = 0;
+                           num_param = 0;
                         }
                         opt_param_formal PONTO_E_VIRGULA 
                         bloco
                         {
-                           int num_param = 0;
                            geraCodigoRetProc(nivel_lexico, num_param);
                            geraCodigoRotulo(pilha_rotulos-1);
                            
@@ -281,13 +285,20 @@ opt_param_formal: ABRE_PARENTESES lista_param_formal FECHA_PARENTESES
 
 lista_param_formal: lista_param_formal VIRGULA parte_param_formal
                      | parte_param_formal
+                     | %empty
 ;
 
-parte_param_formal: param_formal DOIS_PONTOS tipo
+parte_param_formal:  {
+   arg = &guarda_simbolo->args_list[guarda_simbolo->num_args++];
+}
+param_formal DOIS_PONTOS tipo
+{
+   arg->tipo = simbolo;
+}
 ;
 
-param_formal: VAR IDENT 
-               | IDENT
+param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
+               | IDENT {arg->p_ref = 0;strcpy(arg->nome, token);}
 ;
 
 leitura: T_READ ABRE_PARENTESES IDENT {

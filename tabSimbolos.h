@@ -12,7 +12,7 @@ typedef struct tab_simbolo {
 
 void inicia_tab();
 void addSimboloSimples(char*, int, int);
-void addSimboloProcedimento(char*, int, int);
+t_simbolo* addSimboloProcedimento(char*, int, int);
 t_simbolo* buscaSimbolo(char*);
 void removeTabLex(int);
 void updateTipoSimbolo(int, int);

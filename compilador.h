@@ -2,6 +2,7 @@
 #define COMPILADOR
 
 #define TAM_TOKEN 16
+#define MAX_ARGS 16
 
 #include "pilha.h"
 
@@ -38,6 +39,11 @@ typedef enum tipo_simbolo {
   SIMPLES, PROCEDIMENTO
 } t_categoria;
 
+typedef struct args {
+    char nome[TAM_TOKEN];
+    int tipo;
+    bool p_ref;
+} t_arg;
 
 typedef struct simbolo {
     char nome[TAM_TOKEN];
@@ -45,6 +51,8 @@ typedef struct simbolo {
     t_categoria cat;
     int tipo;
     int rotulo;
+    int num_args;
+    t_arg args_list[MAX_ARGS];
 } t_simbolo;
 
 /* -------------------------------------------------------------------

@@ -18,13 +18,14 @@ void addSimboloSimples(char* token, int desloc, int lex)
     tabSim.tokens[tabSim.tam].lex = lex;
 }
 
-void addSimboloProcedimento(char* token, int lex, int rot)
+t_simbolo* addSimboloProcedimento(char* token, int lex, int rot)
 {
     tabSim.tam++;
     strncpy(tabSim.tokens[tabSim.tam].nome, token, TAM_TOKEN);
     tabSim.tokens[tabSim.tam].cat = PROCEDIMENTO;
     tabSim.tokens[tabSim.tam].lex = lex;
     tabSim.tokens[tabSim.tam].rotulo = rot;
+    return &tabSim.tokens[tabSim.tam];
 }
 
 t_simbolo* buscaSimbolo(char* token)
@@ -71,13 +72,25 @@ void printTabSimbolo()
         switch (tabSim.tokens[i].cat)
         {
         case SIMPLES:
-            printf("SIMP | %d: %s | %d, %d | type: %d\n", i, tabSim.tokens[i].nome, tabSim.tokens[i].lex, tabSim.tokens[i].desl, tabSim.tokens[i].tipo);
+            printf("SIMP | %d: %s | %d, %d | type: %d\n", i, 
+                                                            tabSim.tokens[i].nome, 
+                                                            tabSim.tokens[i].lex, 
+                                                            tabSim.tokens[i].desl, 
+                                                            tabSim.tokens[i].tipo);
             break;
         case PROCEDIMENTO:  
-            printf("PROC | %d: %s | %d | R%02d\n", i, tabSim.tokens[i].nome, tabSim.tokens[i].lex, tabSim.tokens[i].rotulo);
+            printf("PROC | %d: %s | %d | R%02d | args: %d\n", i, 
+                                                    tabSim.tokens[i].nome, 
+                                                    tabSim.tokens[i].lex, 
+                                                    tabSim.tokens[i].rotulo,
+                                                    tabSim.tokens[i].num_args);
+            for (int j = 0; j < tabSim.tokens[i].num_args; j++) {
+                printf("     ARGS | %s | t: %d | ref: %d\n", tabSim.tokens[i].args_list[j].nome, 
+                                                            tabSim.tokens[i].args_list[j].tipo,
+                                                            tabSim.tokens[i].args_list[j].p_ref);
+            }
+            
         default:
             break;
         }
     }
-    
-}
