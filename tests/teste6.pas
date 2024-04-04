@@ -1,12 +1,11 @@
 program exemplo75 (input, output);
-var a, b: integer;
-    procedure prod(i: integer, j: boolean);
-    var x, y: integer;
+var a: integer;
+    procedure myprod(i: integer);
+    var x: integer;
     begin
         x := 0;
-        a := 1;
-        y := 0;
+        i := 1;
     end;
 begin
-    prod
+    myprod(1+1);
 end.

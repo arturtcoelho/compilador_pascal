@@ -25,6 +25,9 @@ int num_param = 0;
 t_simbolo* guarda_simbolo;
 t_arg* arg;
 
+int guarda_tipo;
+bool eh_ref = 0;
+
 %}
 
 %token PROGRAM ABRE_PARENTESES FECHA_PARENTESES
@@ -57,15 +60,17 @@ parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES
 ;
 
 bloco:
-parte_declara_vars
-parte_declara_procedimetos
-comando_composto
+   parte_declara_vars
+   parte_declara_procedimetos
+   comando_composto
 { 
    printTabSimbolo();
    geraCodigoDmem(nivel_lexico);
    removeTabLex(nivel_lexico);
 }
 ;
+
+// DECLARA VARS
 
 parte_declara_vars: 
 {deslocamento = 0;} 
@@ -98,11 +103,13 @@ lista_idents: lista_idents VIRGULA IDENT
    | IDENT
 ;
 
-pv_opcional: PONTO_E_VIRGULA 
-   | %empty
-;
+// COMANDOS
 
 comando_composto: T_BEGIN varios_comandos pv_opcional T_END
+;
+
+pv_opcional: PONTO_E_VIRGULA 
+   | %empty
 ;
 
 varios_comandos: 
@@ -117,6 +124,8 @@ comando:
    | leitura | escrita
    | comando_composto
 ;
+
+// IF
 
 comando_if: T_IF expressao 
 {
@@ -139,6 +148,8 @@ parte_else: T_ELSE comando
    | %empty
 ;
 
+// WHILE
+
 comando_while: 
    T_WHILE 
 {
@@ -155,7 +166,18 @@ comando_while:
 }
 ;
 
-ident_solto: chamada_procedimento | comando_atribuicao 
+// ATRIBUICAO
+
+ident_solto: parte_chamada_argumentos 
+   | comando_atribuicao
+   | %empty {
+   strcpy(token, ident_save);
+   t_simbolo *id = buscaSimbolo(token);
+   if (!id) imprimeErro("Não existe o simbolo");
+   if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
+   geraCodigoChamaProc(id->rotulo, nivel_lexico);
+   guarda_simbolo = id;
+} 
 ;
 
 comando_atribuicao: 
@@ -163,7 +185,7 @@ comando_atribuicao:
    strcpy(token, ident_save);
    simb_esquerda = buscaSimbolo(token);
    if (!simb_esquerda) imprimeErro("Não existe o simbolo");
-   if (simb_esquerda->cat != SIMPLES) imprimeErro("Impossivel atribuir");
+   if (simb_esquerda->cat != SIMPLES && simb_esquerda->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
 } 
    ATRIBUICAO expressao
 {
@@ -173,26 +195,91 @@ comando_atribuicao:
 }
 ;
 
-chamada_procedimento: 
-{
-   strcpy(token, ident_save);
-   t_simbolo *id = buscaSimbolo(token);
-   if (!id) imprimeErro("Não existe o simbolo");
-   if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
-   geraCodigoChamaProc(id->rotulo, nivel_lexico);
-}
-   parte_chamada_parametros
-;
+// DECLARA PROD
 
-parte_chamada_parametros: ABRE_PARENTESES argumentos FECHA_PARENTESES 
+parte_declara_procedimetos: declaracao_procedimeto 
+   | parte_declara_procedimetos declaracao_procedimeto 
    | %empty
 ;
 
-argumentos: argumentos VIRGULA argumento | argumento
+declaracao_procedimeto: T_PROCEDURE IDENT 
+{
+   nivel_lexico++;
+   pilha_rotulos+=2;
+   geraCodigoDesvioS(pilha_rotulos-1);
+   geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
+   guarda_simbolo = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+   guarda_simbolo->num_args = 0;
+   num_param = 0;
+}
+   opt_param_formal PONTO_E_VIRGULA 
+   bloco
+{
+   geraCodigoRetProc(nivel_lexico, num_param);
+   geraCodigoRotulo(pilha_rotulos-1);
+      
+   nivel_lexico--;
+} 
+   PONTO_E_VIRGULA
 ;
 
-argumento: IDENT | expressao
+opt_param_formal: ABRE_PARENTESES lista_param_formal FECHA_PARENTESES 
+{
+   corrigeDeslocFormal(guarda_simbolo->num_args);
+}
+   | %empty
 ;
+
+lista_param_formal: lista_param_formal VIRGULA parte_param_formal
+   | parte_param_formal
+   | %empty
+;
+
+parte_param_formal:  
+{
+   arg = &guarda_simbolo->args_list[guarda_simbolo->num_args++];
+}
+   param_formal DOIS_PONTOS tipo
+{
+   arg->tipo = simbolo;
+   adicionaSimboloFormal(arg->nome, nivel_lexico, simbolo);
+}
+;
+
+param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
+   | IDENT {arg->p_ref = 0;strcpy(arg->nome, token);}
+;
+
+// CHAMADA PROD
+
+parte_chamada_argumentos: ABRE_PARENTESES
+{
+   num_param = -1;
+}
+   argumentos FECHA_PARENTESES 
+{
+   if (num_param+1 != guarda_simbolo->num_args) imprimeErro("Numero errado de argumentos");
+   if (!guarda_simbolo) imprimeErro("Não existe o simbolo");
+   if (guarda_simbolo->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
+   geraCodigoChamaProc(guarda_simbolo->rotulo, nivel_lexico);
+   guarda_simbolo = guarda_simbolo;
+}
+;
+
+argumentos: argumentos VIRGULA argumento
+   | argumento
+;
+
+argumento: 
+   expressao
+{
+   num_param++;
+   printf("tipo: %d\n", guarda_tipo);
+   if (guarda_tipo != guarda_simbolo->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
+}
+;
+
+// EXPLRESSOES
 
 expressao: expressao_aritmetica expressao_booleana | expressao_aritmetica
 ;
@@ -260,77 +347,35 @@ F:
 {
    empilha(&pilha_f, simb_integer);
    geraCodigoCrct(token);
+   guarda_tipo = simb_integer;
 }
-   | bool_val 
+   | bool_val
 {
    empilha(&pilha_f, simb_bool);
    geraCodigoBool(token);
+   guarda_tipo = simb_bool;
 }
    | IDENT 
 {
    t_simbolo *id = buscaSimbolo(token);
+   printTabSimbolo();
    if (!id) imprimeErro("Não existe o simbolo");
-   if (id->cat != SIMPLES) imprimeErro("Quero um val simples");
+   if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
    empilha(&pilha_f, id->tipo);
    geraCodigoCrvl(id->lex, id->desl);
+   guarda_tipo = id->tipo;;
 }
    | ABRE_PARENTESES expressao FECHA_PARENTESES
 {
    int t = desempilha(&pilha_e);
    empilha(&pilha_f, t);
+   guarda_tipo = t;
 }
 ;
 
 bool_val: T_TRUE | T_FALSE;
 
-parte_declara_procedimetos: declaracao_procedimeto 
-   | parte_declara_procedimetos declaracao_procedimeto 
-   | %empty
-;
-
-declaracao_procedimeto: T_PROCEDURE IDENT 
-{
-   nivel_lexico++;
-   pilha_rotulos+=2;
-   geraCodigoDesvioS(pilha_rotulos-1);
-   geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
-   guarda_simbolo = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
-   guarda_simbolo->num_args = 0;
-   num_param = 0;
-}
-   opt_param_formal PONTO_E_VIRGULA 
-   bloco
-{
-   geraCodigoRetProc(nivel_lexico, num_param);
-   geraCodigoRotulo(pilha_rotulos-1);
-      
-   nivel_lexico--;
-} 
-   PONTO_E_VIRGULA
-;
-
-opt_param_formal: ABRE_PARENTESES lista_param_formal FECHA_PARENTESES 
-   | %empty
-;
-
-lista_param_formal: lista_param_formal VIRGULA parte_param_formal
-   | parte_param_formal
-   | %empty
-;
-
-parte_param_formal:  
-{
-   arg = &guarda_simbolo->args_list[guarda_simbolo->num_args++];
-}
-   param_formal DOIS_PONTOS tipo
-{
-   arg->tipo = simbolo;
-}
-;
-
-param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
-   | IDENT {arg->p_ref = 0;strcpy(arg->nome, token);}
-;
+// IO
 
 leitura: 
    T_READ ABRE_PARENTESES IDENT 

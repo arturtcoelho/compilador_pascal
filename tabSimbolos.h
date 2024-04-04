@@ -13,10 +13,13 @@ typedef struct tab_simbolo {
 void inicia_tab();
 void addSimboloSimples(char*, int, int);
 t_simbolo* addSimboloProcedimento(char*, int, int);
+void adicionaSimboloFormal(char*, int, int);
+void corrigeDeslocFormal(int);
 t_simbolo* buscaSimbolo(char*);
 void removeTabLex(int);
 void updateTipoSimbolo(int, int);
 void printTabSimbolo();
+void printSimbolo(t_simbolo*);
 int contaTabSimb(int);
 
 #endif

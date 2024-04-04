@@ -116,6 +116,11 @@ void geraCodigoChamaProc(int rot, int lex)
   fprintf(fp, "    CHPR R%02d, %d\n", rot, lex); fflush(fp);
 }
 
+void geraCodigoParam()
+{
+  
+}
+
 void geraWrite()
 {
   t_simbolo * s = buscaSimbolo(token);

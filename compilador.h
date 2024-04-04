@@ -36,7 +36,7 @@ typedef enum simbolos {
 } simbolos;
 
 typedef enum tipo_simbolo {
-  SIMPLES, PROCEDIMENTO
+  SIMPLES, PROCEDIMENTO, PARAMETRO_FORMAL
 } t_categoria;
 
 typedef struct args {
@@ -52,6 +52,7 @@ typedef struct simbolo {
     int tipo;
     int rotulo;
     int num_args;
+    bool p_ref;
     t_arg args_list[MAX_ARGS];
 } t_simbolo;
 
@@ -84,6 +85,7 @@ void geraCodigoDesvioS(int);
 void geraCodigoEntraProc(int, int);
 void geraCodigoRetProc(int, int);
 void geraCodigoChamaProc(int, int);
+void geraCodigoParam();
 void geraWrite();
 void geraWriteConstante();
 
