@@ -26,7 +26,9 @@ t_simbolo* guarda_simbolo;
 t_arg* arg;
 
 int guarda_tipo;
-bool eh_ref = 0;
+bool eh_vs = 0;
+bool eh_param = 0;
+bool carregou = 0;
 
 %}
 
@@ -176,7 +178,7 @@ ident_solto: parte_chamada_argumentos
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(id->rotulo, nivel_lexico);
-   guarda_simbolo = id;
+   simb_esquerda = id;
 } 
 ;
 
@@ -191,7 +193,12 @@ comando_atribuicao:
 {
    int t = desempilha(&pilha_e);
    if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
-   geraCodigoArmz(simb_esquerda->lex, simb_esquerda->desl);
+   printSimbolo(simb_esquerda);
+   if (simb_esquerda->p_ref) {
+      geraCodigoArmi(simb_esquerda->lex, simb_esquerda->desl);
+   } else {
+      geraCodigoArmz(simb_esquerda->lex, simb_esquerda->desl);
+   }
 }
 ;
 
@@ -208,8 +215,8 @@ declaracao_procedimeto: T_PROCEDURE IDENT
    pilha_rotulos+=2;
    geraCodigoDesvioS(pilha_rotulos-1);
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
-   guarda_simbolo = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
-   guarda_simbolo->num_args = 0;
+   simb_esquerda = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+   simb_esquerda->num_args = 0;
    num_param = 0;
 }
    opt_param_formal PONTO_E_VIRGULA 
@@ -225,24 +232,24 @@ declaracao_procedimeto: T_PROCEDURE IDENT
 
 opt_param_formal: ABRE_PARENTESES lista_param_formal FECHA_PARENTESES 
 {
-   corrigeDeslocFormal(guarda_simbolo->num_args);
+   corrigeDeslocFormal(simb_esquerda->num_args);
 }
    | %empty
 ;
 
-lista_param_formal: lista_param_formal VIRGULA parte_param_formal
+lista_param_formal: lista_param_formal PONTO_E_VIRGULA parte_param_formal
    | parte_param_formal
    | %empty
 ;
 
 parte_param_formal:  
 {
-   arg = &guarda_simbolo->args_list[guarda_simbolo->num_args++];
+   arg = &simb_esquerda->args_list[simb_esquerda->num_args++];
 }
    param_formal DOIS_PONTOS tipo
 {
    arg->tipo = simbolo;
-   adicionaSimboloFormal(arg->nome, nivel_lexico, simbolo);
+   adicionaSimboloFormal(arg->nome, nivel_lexico, simbolo, arg->p_ref);
 }
 ;
 
@@ -254,15 +261,15 @@ param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
 
 parte_chamada_argumentos: ABRE_PARENTESES
 {
+   simb_esquerda = buscaSimbolo(ident_save);
    num_param = -1;
 }
    argumentos FECHA_PARENTESES 
 {
-   if (num_param+1 != guarda_simbolo->num_args) imprimeErro("Numero errado de argumentos");
-   if (!guarda_simbolo) imprimeErro("Não existe o simbolo");
-   if (guarda_simbolo->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
-   geraCodigoChamaProc(guarda_simbolo->rotulo, nivel_lexico);
-   guarda_simbolo = guarda_simbolo;
+   if (num_param+1 != simb_esquerda->num_args) imprimeErro("Numero errado de argumentos");
+   if (!simb_esquerda) imprimeErro("Não existe o simbolo");
+   if (simb_esquerda->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
+   geraCodigoChamaProc(simb_esquerda->rotulo, nivel_lexico);
 }
 ;
 
@@ -271,15 +278,34 @@ argumentos: argumentos VIRGULA argumento
 ;
 
 argumento: 
+{
+   carregou = 0;
+   num_param++;
+   if (simb_esquerda->args_list[num_param].p_ref)
+      eh_param = 1;
+   else
+      eh_param = 0;
+}
    expressao
 {
-   num_param++;
-   printf("tipo: %d\n", guarda_tipo);
-   if (guarda_tipo != guarda_simbolo->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
+   eh_param = 0;
+   if (guarda_tipo != simb_esquerda->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
+   if (simb_esquerda->args_list[num_param].p_ref) {
+      if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
+      if (!carregou) {
+         if (guarda_simbolo->p_ref) {
+            geraCodigoCrvl(guarda_simbolo->lex, guarda_simbolo->desl);
+            printf("CRVL 2\n"); 
+         } else {
+            geraCodigoCren(guarda_simbolo->lex, guarda_simbolo->desl);
+            printf("CREN 2\n"); 
+         }
+      }
+   }
 }
 ;
 
-// EXPLRESSOES
+// EXPRESSOES
 
 expressao: expressao_aritmetica expressao_booleana | expressao_aritmetica
 ;
@@ -348,28 +374,40 @@ F:
    empilha(&pilha_f, simb_integer);
    geraCodigoCrct(token);
    guarda_tipo = simb_integer;
+   eh_vs = 0;
 }
    | bool_val
 {
    empilha(&pilha_f, simb_bool);
    geraCodigoBool(token);
    guarda_tipo = simb_bool;
+   eh_vs = 0;
 }
    | IDENT 
 {
    t_simbolo *id = buscaSimbolo(token);
-   printTabSimbolo();
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
    empilha(&pilha_f, id->tipo);
-   geraCodigoCrvl(id->lex, id->desl);
-   guarda_tipo = id->tipo;;
+   printf("CARREGA IDENT %d\n", eh_param);
+   if (!eh_param && id->p_ref) {
+      geraCodigoCrvi(id->lex, id->desl);
+      printf("CRVI\n");
+   } else if (!eh_param) {
+      geraCodigoCrvl(id->lex, id->desl);
+      printf("CRVL IDENT\n");
+      carregou = 1;
+   }
+   guarda_tipo = id->tipo;
+   guarda_simbolo = id;
+   eh_vs = 1;
 }
    | ABRE_PARENTESES expressao FECHA_PARENTESES
 {
    int t = desempilha(&pilha_e);
    empilha(&pilha_f, t);
    guarda_tipo = t;
+   eh_vs = 0;
 }
 ;
 
@@ -396,10 +434,11 @@ lista_write: lista_write VIRGULA parte_imprimivel
 ;
 
 parte_imprimivel: 
-   IDENT 
+   expressao 
 {geraWrite();} 
-   | NUMERO 
-{geraWriteConstante();};
+   /* | NUMERO
+{geraWriteConstante();} */
+;
 
 %%
 

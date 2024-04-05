@@ -73,12 +73,22 @@ void geraCodigoBool(char* cod)
 
 void geraCodigoCrvl(int lex, int desl)
 {
-  fprintf(fp, "    CRVL %d, %d\n", lex, desl); fflush(fp);
+  fprintf(fp, "    CRVL %d,%d\n", lex, desl); fflush(fp);
+}
+
+void geraCodigoCrvi(int lex, int desl)
+{
+  fprintf(fp, "    CRVI %d,%d\n", lex, desl); fflush(fp);
 }
 
 void geraCodigoArmz(int lex, int desl)
 {
-  fprintf(fp, "    ARMZ %d, %d\n", lex, desl); fflush(fp);
+  fprintf(fp, "    ARMZ %d,%d\n", lex, desl); fflush(fp);
+}
+
+void geraCodigoArmi(int lex, int desl)
+{
+  fprintf(fp, "    ARMI %d,%d\n", lex, desl); fflush(fp);
 }
 
 void geraCodigoSimples(char* m)
@@ -108,12 +118,12 @@ void geraCodigoEntraProc(int rot,int lex)
 
 void geraCodigoRetProc(int lex,int num_param)
 {
-  fprintf(fp, "    RTPR %d, %d\n", lex, num_param); fflush(fp);
+  fprintf(fp, "    RTPR %d,%d\n", lex, num_param); fflush(fp);
 }
 
 void geraCodigoChamaProc(int rot, int lex)
 {
-  fprintf(fp, "    CHPR R%02d, %d\n", rot, lex); fflush(fp);
+  fprintf(fp, "    CHPR R%02d,%d\n", rot, lex); fflush(fp);
 }
 
 void geraCodigoParam()
@@ -121,11 +131,16 @@ void geraCodigoParam()
   
 }
 
+void geraCodigoCren(int lex, int desl)
+{
+  fprintf(fp, "    CREN %d,%d\n", lex, desl); fflush(fp);
+}
+
 void geraWrite()
 {
-  t_simbolo * s = buscaSimbolo(token);
-  if (s->cat != SIMPLES) imprimeErro("Tentando ler valor em simbolo nao simples");
-  geraCodigoCrvl(s->lex, s->desl);
+  // t_simbolo * s = buscaSimbolo(token);
+  // if (s->cat != SIMPLES) imprimeErro("Tentando ler valor em simbolo nao simples");
+  // geraCodigoCrvl(s->lex, s->desl);
   geraCodigoSimples("IMPR");
 }
 

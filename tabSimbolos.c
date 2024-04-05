@@ -28,14 +28,14 @@ t_simbolo* addSimboloProcedimento(char* token, int lex, int rot)
     return &tabSim.tokens[tabSim.tam];
 }
 
-void adicionaSimboloFormal(char* token, int lex, int tipo)
+void adicionaSimboloFormal(char* token, int lex, int tipo, int ref)
 {
     tabSim.tam++;
     strncpy(tabSim.tokens[tabSim.tam].nome, token, TAM_TOKEN);
     tabSim.tokens[tabSim.tam].cat = PARAMETRO_FORMAL;
     tabSim.tokens[tabSim.tam].lex = lex;
     tabSim.tokens[tabSim.tam].tipo = tipo;
-
+    tabSim.tokens[tabSim.tam].p_ref = ref;
 }
 
 void corrigeDeslocFormal(int n)
@@ -112,11 +112,12 @@ void printTabSimbolo()
             }
             break;
         case PARAMETRO_FORMAL:
-            printf("FORM | %d: %s | %d, %d | type: %d\n", i,
+            printf("FORM | %d: %s | %d, %d | type: %d | ref: %d\n", i,
                                                 tabSim.tokens[i].nome, 
                                                 tabSim.tokens[i].lex, 
                                                 tabSim.tokens[i].desl, 
-                                                tabSim.tokens[i].tipo);
+                                                tabSim.tokens[i].tipo,
+                                                tabSim.tokens[i].p_ref);
             break;
         default:
             break;
@@ -126,6 +127,7 @@ void printTabSimbolo()
 
 void printSimbolo(t_simbolo* sim)
 {
+    printf("Simbolo: "); 
     if (!sim) {
         printf("Simbolo Nulo\n"); 
         return;
@@ -149,11 +151,12 @@ void printSimbolo(t_simbolo* sim)
             }
             break;
         case PARAMETRO_FORMAL:
-            printf("FORM | %s | %d, %d | type: %d\n",
+            printf("FORM | %s | %d, %d | type: %d | ref: %d\n",
                                                 sim->nome, 
                                                 sim->lex, 
                                                 sim->desl, 
-                                                sim->tipo);
+                                                sim->tipo,
+                                                sim->p_ref);
             break;
         default:
             break;

@@ -40,7 +40,7 @@ comentario "(*".*"*)"
 
 %%
 
-{pulo_linha} {nl++;}
+{pulo_linha} {nl++;printf("%d ", nl);}
 
 {descarte}
 
