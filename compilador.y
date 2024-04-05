@@ -295,10 +295,8 @@ argumento:
       if (!carregou) {
          if (guarda_simbolo->p_ref) {
             geraCodigoCrvl(guarda_simbolo->lex, guarda_simbolo->desl);
-            printf("CRVL 2\n"); 
          } else {
             geraCodigoCren(guarda_simbolo->lex, guarda_simbolo->desl);
-            printf("CREN 2\n"); 
          }
       }
    }
@@ -389,13 +387,10 @@ F:
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
    empilha(&pilha_f, id->tipo);
-   printf("CARREGA IDENT %d\n", eh_param);
    if (!eh_param && id->p_ref) {
       geraCodigoCrvi(id->lex, id->desl);
-      printf("CRVI\n");
    } else if (!eh_param) {
       geraCodigoCrvl(id->lex, id->desl);
-      printf("CRVL IDENT\n");
       carregou = 1;
    }
    guarda_tipo = id->tipo;
@@ -464,6 +459,8 @@ int main (int argc, char** argv) {
 
    yyin=fp;
    yyparse();
+
+   printf("\n");
 
    return 0;
 }

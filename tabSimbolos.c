@@ -80,8 +80,8 @@ int contaTabSimb(int lex)
 {
     int count = 0;
     for (int i = 0; i < tabSim.tam; i++) {
-        if (tabSim.tokens[i].lex == lex)
-            count++;        
+        if (tabSim.tokens[i].lex == lex && tabSim.tokens[i].cat == SIMPLES)
+            count++;
     }
     return count;
 }
