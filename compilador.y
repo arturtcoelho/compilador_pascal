@@ -63,7 +63,7 @@ parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES
 
 bloco:
    parte_declara_vars
-   parte_declara_procedimetos
+   parte_declara_varias_subrotinas
    comando_composto
 { 
    printTabSimbolo();
@@ -187,7 +187,7 @@ comando_atribuicao:
    strcpy(token, ident_save);
    simb_esquerda = buscaSimbolo(token);
    if (!simb_esquerda) imprimeErro("Não existe o simbolo");
-   if (simb_esquerda->cat != SIMPLES && simb_esquerda->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
+   if (simb_esquerda->cat != SIMPLES && simb_esquerda->cat != PARAMETRO_FORMAL && simb_esquerda->cat != RET_FUNCAO) imprimeErro("Impossivel atribuir");
 } 
    ATRIBUICAO expressao
 {
@@ -204,9 +204,37 @@ comando_atribuicao:
 
 // DECLARA PROD
 
-parte_declara_procedimetos: declaracao_procedimeto 
-   | parte_declara_procedimetos declaracao_procedimeto 
+parte_declara_varias_subrotinas: parte_declara_subrotinas 
+   | parte_declara_varias_subrotinas parte_declara_subrotinas 
    | %empty
+;
+
+parte_declara_subrotinas: declaracao_procedimeto | declara_funcao;
+
+declara_funcao: T_FUNCTION IDENT
+{
+   nivel_lexico++;
+   pilha_rotulos+=2;
+   geraCodigoDesvioS(pilha_rotulos-1);
+   geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
+   simb_esquerda = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, FUNCAO);
+   simb_esquerda->num_args = 0;
+   num_param = 0;
+}
+opt_param_formal DOIS_PONTOS tipo
+{
+   simb_esquerda->tipo = simbolo;
+   adicionaSimboloRetFunc(simb_esquerda->nome, nivel_lexico, -1*(4+simb_esquerda->num_args), simbolo);
+} 
+PONTO_E_VIRGULA 
+bloco
+{
+   geraCodigoRetProc(nivel_lexico, num_param);
+   geraCodigoRotulo(pilha_rotulos-1);
+      
+   nivel_lexico--;
+} 
+PONTO_E_VIRGULA
 ;
 
 declaracao_procedimeto: T_PROCEDURE IDENT 
@@ -215,7 +243,7 @@ declaracao_procedimeto: T_PROCEDURE IDENT
    pilha_rotulos+=2;
    geraCodigoDesvioS(pilha_rotulos-1);
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
-   simb_esquerda = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
+   simb_esquerda = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, PROCEDIMENTO);
    simb_esquerda->num_args = 0;
    num_param = 0;
 }
@@ -268,7 +296,7 @@ parte_chamada_argumentos: ABRE_PARENTESES
 {
    if (num_param+1 != simb_esquerda->num_args) imprimeErro("Numero errado de argumentos");
    if (!simb_esquerda) imprimeErro("Não existe o simbolo");
-   if (simb_esquerda->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
+   if (simb_esquerda->cat != PROCEDIMENTO && simb_esquerda->cat != FUNCAO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(simb_esquerda->rotulo, nivel_lexico);
 }
 ;
