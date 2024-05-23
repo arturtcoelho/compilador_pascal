@@ -141,6 +141,9 @@ comando:
 
 comando_if: T_IF expressao 
 {
+   int t = desempilha(&pilha_e);
+   if (t != simb_bool) imprimeErro("Erro de tipo na avaliação IF");
+
    pilha_rotulos+=2;
    geraCodigoDesvioF(pilha_rotulos-1);
 } 
@@ -169,7 +172,11 @@ comando_while:
    geraCodigoRotulo(pilha_rotulos-1);
 } 
    expressao T_DO 
-{geraCodigoDesvioF(pilha_rotulos);}
+{
+   int t = desempilha(&pilha_e);
+   if (t != simb_bool) imprimeErro("Erro de tipo na avaliação IF");
+   geraCodigoDesvioF(pilha_rotulos);
+}
    comando
 {
    geraCodigoDesvioS(pilha_rotulos-1);

@@ -7,13 +7,3 @@
      CRVL 0, 0
      CRCT 1
      SOMA
-     DSVF R00
-     CRCT 1
-     ARMZ 0, 0
-     DSVS R01
-R00: NADA
-R01: NADA
-     CRVL 0, 0
-     IMPR
-     DMEM 2
-     PARA
