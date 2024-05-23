@@ -6,5 +6,5 @@ var a: integer;
     end;
 begin
     a := 1;
-    a := MyFunction(a);
+    a := MyFunction(MyFunction(a));
 end.

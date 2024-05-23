@@ -93,13 +93,14 @@ void updateTipoSimbolo(int simbolo, int n)
 
 int contaTabSimb(int lex) 
 {
-    // printf("TAM: %d\n", tabSim.tam);
+    printf("TAM: %d\n", tabSim.tam);
     int count = 0;
     for (int i = 0; i < tabSim.tam+1; i++) {
-        // printSimbolo(&(tabSim.tokens[i]));
+        printSimbolo(&(tabSim.tokens[i]));
         if (tabSim.tokens[i].lex == lex 
             && tabSim.tokens[i].cat != PROCEDIMENTO 
-            && tabSim.tokens[i].cat != PARAMETRO_FORMAL)
+            && tabSim.tokens[i].cat != PARAMETRO_FORMAL
+            && tabSim.tokens[i].cat != FUNCAO)
             count++;        
     }
     return count;

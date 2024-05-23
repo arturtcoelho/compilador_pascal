@@ -34,7 +34,7 @@ t_arg* arg;
 
 int guarda_tipo;
 bool eh_vs = 0;
-bool eh_param = 0;
+bool eh_ref = 0;
 bool carregou = 0;
 
 %}
@@ -231,7 +231,7 @@ declara_funcao: T_FUNCTION IDENT
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
    simb_esquerda_declaracao = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, FUNCAO);
    simb_esquerda_declaracao->num_args = 0;
-   num_param = 0;
+   empilha(&pilha_args, 0);
 }
 opt_param_formal DOIS_PONTOS tipo
 {
@@ -240,7 +240,8 @@ opt_param_formal DOIS_PONTOS tipo
 PONTO_E_VIRGULA 
 bloco
 {
-   geraCodigoRetProc(nivel_lexico, num_param);
+   int n = desempilha(&pilha_args);
+   geraCodigoRetProc(nivel_lexico, n);
    geraCodigoRotulo(pilha_rotulos-1);
       
    nivel_lexico--;
@@ -290,7 +291,7 @@ parte_param_formal:
 {
    arg = &simb_esquerda_declaracao->args_list[simb_esquerda_declaracao->num_args++];
    int n = desempilha(&pilha_args);
-   empilha(&pilha_args, n+1);
+   empilha(&pilha_args, n+1);    
 }
    param_formal DOIS_PONTOS tipo
 {
@@ -309,13 +310,10 @@ parte_chamada_funcao: parte_chamada_argumentos_funcao | %empty;
 
 parte_chamada_argumentos_funcao: ABRE_PARENTESES
 {
-   printf("--------------------------- args func\n");
-   imprime_pilha_s(&pilha_chamada_funcoes);
    empilha(&pilha_args, -1);
 }
    argumentos_funcao FECHA_PARENTESES 
 {
-   printf("CHEGAMOS AQUI\n");
    t_simbolo* s = desempilha_s(&pilha_chamada_funcoes);
    int n_params = desempilha(&pilha_args);
 
@@ -323,6 +321,7 @@ parte_chamada_argumentos_funcao: ABRE_PARENTESES
    if (!s) imprimeErro("Não existe o simbolo 3");
    if (s->cat != PROCEDIMENTO && s->cat != FUNCAO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(s->rotulo, nivel_lexico);
+   guarda_tipo = s->tipo;
 }
 ;
 
@@ -337,22 +336,25 @@ argumento_funcao:
 
    int n = desempilha(&pilha_args);
 
-   if (s->args_list[n].p_ref)
-      eh_param = 1;
+   printf("REFERENCIA? ? ? %d | n = %d", s->args_list[n].p_ref, n);
+   if (s->args_list[n+1].p_ref)
+      eh_ref = 1;
    else
-      eh_param = 0;
+      eh_ref = 0;
       
    empilha_s(&pilha_chamada_funcoes, s);
    empilha(&pilha_args, n+1);
+
 }
    expressao
 {
    t_simbolo* s = desempilha_s(&pilha_chamada_funcoes);
+   imprime_pilha(&pilha_args);
    int n = desempilha(&pilha_args);
 
-   eh_param = 0;
+   eh_ref = 0;
 
-   if (guarda_tipo != s->args_list[n].tipo) imprimeErro("Tipo errado do argumento");
+   if (guarda_tipo != s->args_list[n].tipo) imprimeErro("Tipo errado do argumento :(");
 
    if (s->args_list[n].p_ref) {
       if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
@@ -392,13 +394,13 @@ argumento:
    carregou = 0;
    num_param++;
    if (simb_esquerda->args_list[num_param].p_ref)
-      eh_param = 1;
+      eh_ref = 1;
    else
-      eh_param = 0;
+      eh_ref = 0;
 }
    expressao
 {
-   eh_param = 0;
+   eh_ref = 0;
    if (guarda_tipo != simb_esquerda->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
    if (simb_esquerda->args_list[num_param].p_ref) {
       if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
@@ -499,18 +501,20 @@ F:
       && id->cat != PARAMETRO_FORMAL
       && id->cat != FUNCAO) imprimeErro("Quero um val simples");
 
+   
    if (id->cat == FUNCAO) {
       empilha_s(&pilha_chamada_funcoes, id);
-      empilha(&pilha_args, -1);
+      geraCodigoAmem(1);
+   } else {
+      if (!eh_ref && id->p_ref) {
+         geraCodigoCrvi(id->lex, id->desl);
+      } else if (!eh_ref) {
+         geraCodigoCrvl(id->lex, id->desl);
+         carregou = 1;
+      }
    }
 
    empilha(&pilha_f, id->tipo);
-   if (!eh_param && id->p_ref) {
-      geraCodigoCrvi(id->lex, id->desl);
-   } else if (!eh_param) {
-      geraCodigoCrvl(id->lex, id->desl);
-      carregou = 1;
-   }
    guarda_tipo = id->tipo;
    guarda_simbolo = id;
    eh_vs = 1;
