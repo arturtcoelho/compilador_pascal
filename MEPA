@@ -1,3 +1,4 @@
+<<<<<<< HEAD
     INPP
     AMEM 1
     DSVS R00
@@ -10,3 +11,7 @@ R01:ENPR 1
 R00:NADA
     CRCT 1
     ARMZ 0,0
+=======
+     INPP
+     AMEM 2
+>>>>>>> 6d89ce8086421a1d41f35b7ac6ce2a03edbfac71

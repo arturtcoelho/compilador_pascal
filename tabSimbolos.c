@@ -60,10 +60,15 @@ void corrigeDeslocFormal(int n)
 }
 
 
-t_simbolo* buscaSimbolo(char* token)
+t_simbolo* buscaSimbolo(char* token, int lex)
 {
+    // printf("My lex: %d\n", lex);
+    // printf("My tok: %s\n", token);
     for (int i = tabSim.tam; i >= 0; i--) {
-        if (!strcmp(tabSim.tokens[i].nome, token))
+        // printSimbolo(&(tabSim.tokens[i]));
+        // printf("lex %d >= %d \n", lex + ((tabSim.tokens[i].cat == PROCEDIMENTO) ? 1 : 0), tabSim.tokens[i].lex);
+        if ((lex + ((tabSim.tokens[i].cat == PROCEDIMENTO) ? 1 : 0)) >= tabSim.tokens[i].lex 
+            && !strcmp(tabSim.tokens[i].nome, token))
             return &tabSim.tokens[i];
     }
     return NULL;    
@@ -89,11 +94,18 @@ void updateTipoSimbolo(int simbolo, int n)
 
 int contaTabSimb(int lex) 
 {
+    // printf("TAM: %d\n", tabSim.tam);
     int count = 0;
     for (int i = 0; i < tabSim.tam; i++) {
         if (tabSim.tokens[i].lex == lex && tabSim.tokens[i].cat == SIMPLES)
             count++;
-    }
+    // for (int i = 0; i < tabSim.tam+1; i++) {
+    //     // printSimbolo(&(tabSim.tokens[i]));
+    //     if (tabSim.tokens[i].lex == lex 
+    //         && tabSim.tokens[i].cat != PROCEDIMENTO 
+    //         && tabSim.tokens[i].cat != PARAMETRO_FORMAL)
+    //         count++;        
+    // }
     return count;
 }
 
