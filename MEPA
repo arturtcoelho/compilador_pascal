@@ -2,3 +2,18 @@
      AMEM 1
      DSVS R00
 R01: ENPR 1
+     CRVL 1, -4
+     CRCT 2
+     MULT
+     ARMZ 1, -5
+     DMEM 1
+     RTPR 1, 0
+R00: NADA
+     CRCT 1
+     ARMZ 0, 0
+     CRVL 1, -5
+     CRVL 0, 0
+     CHPR R01, 0
+     ARMZ 0, 0
+     DMEM 1
+     PARA

@@ -64,7 +64,7 @@ t_simbolo* buscaSimbolo(char* token, int lex)
     for (int i = tabSim.tam; i >= 0; i--) {
         // printSimbolo(&(tabSim.tokens[i]));
         // printf("lex %d >= %d \n", lex + ((tabSim.tokens[i].cat == PROCEDIMENTO) ? 1 : 0), tabSim.tokens[i].lex);
-        if ((lex + ((tabSim.tokens[i].cat == PROCEDIMENTO) ? 1 : 0)) >= tabSim.tokens[i].lex 
+        if ((lex + ((tabSim.tokens[i].cat == PROCEDIMENTO || tabSim.tokens[i].cat == FUNCAO) ? 1 : 0)) >= tabSim.tokens[i].lex 
             && !strcmp(tabSim.tokens[i].nome, token))
             return &tabSim.tokens[i];
     }
@@ -75,7 +75,9 @@ void removeTabLex(int lex)
 {
     int i = tabSim.tam;
     int count = 0;
-    while (i >= 0 && tabSim.tokens[i].lex == lex && tabSim.tokens[i].cat != PROCEDIMENTO) {
+    while (i >= 0 && tabSim.tokens[i].lex == lex 
+            && tabSim.tokens[i].cat != PROCEDIMENTO
+            && tabSim.tokens[i].cat != FUNCAO) {
         i--;
         count++;
     }
@@ -158,7 +160,6 @@ void printTabSimbolo()
 
 void printSimbolo(t_simbolo* sim)
 {
-    printf("Simbolo: "); 
     if (!sim) {
         printf("Simbolo Nulo\n"); 
         return;
@@ -177,6 +178,20 @@ void printSimbolo(t_simbolo* sim)
             for (int j = 0; j < sim->num_args; j++) {
                 printf("     ARGS | %s | t: %d | ref: %d\n", 
                                                             sim->args_list[j].nome, 
+                                                            sim->args_list[j].tipo,
+                                                            sim->args_list[j].p_ref);
+            }
+            break;
+        case FUNCAO:
+            printf("FUNC | %s | %d, %d | t: %d | R%02d | args: %d\n", 
+                                                    sim->nome, 
+                                                    sim->lex, 
+                                                    sim->desl, 
+                                                    sim->tipo, 
+                                                    sim->rotulo,
+                                                    sim->num_args);
+            for (int j = 0; j < sim->num_args; j++) {
+                printf("     ARGS | %s | t: %d | ref: %d\n", sim->args_list[j].nome, 
                                                             sim->args_list[j].tipo,
                                                             sim->args_list[j].p_ref);
             }

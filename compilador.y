@@ -7,6 +7,7 @@
 #include "compilador.h"
 #include "tabSimbolos.h"
 #include "pilha.h"
+#include "pilha_s.h"
 
 int num_vars;
 int deslocamento;
@@ -17,6 +18,8 @@ t_pilha pilha_t;
 t_pilha pilha_f;
 
 t_pilha pilha_args;
+
+t_pilha_s pilha_chamada_funcoes;
 
 t_simbolo *simb_esquerda_atribuicao;
 t_simbolo *simb_esquerda_declaracao;
@@ -180,7 +183,7 @@ ident_solto: parte_chamada_argumentos
    | %empty {
    strcpy(token, ident_save);
    t_simbolo *id = buscaSimbolo(token, nivel_lexico);
-   if (!id) imprimeErro("Não existe o simbolo");
+   if (!id) imprimeErro("Não existe o simbolo 1");
    if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(id->rotulo, nivel_lexico);
    simb_esquerda = id;
@@ -193,14 +196,16 @@ comando_atribuicao:
    simb_esquerda_atribuicao = buscaSimbolo(token, nivel_lexico);
    printTabSimbolo();
    printSimbolo(simb_esquerda_atribuicao);
-   if (!simb_esquerda_atribuicao) imprimeErro("Não existe o simbolo");
-   if (simb_esquerda_atribuicao->cat != SIMPLES && simb_esquerda_atribuicao->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
+   if (!simb_esquerda_atribuicao) imprimeErro("Não existe o simbolo 2");
+   if (simb_esquerda_atribuicao->cat != SIMPLES 
+      && simb_esquerda_atribuicao->cat != PARAMETRO_FORMAL
+      && simb_esquerda_atribuicao->cat != FUNCAO) imprimeErro("Impossivel atribuir");
+   // printf("CHEGAMOS AQUI\n");
 } 
    ATRIBUICAO expressao
 {
    int t = desempilha(&pilha_e);
    if (simb_esquerda_atribuicao->tipo != t) imprimeErro("Erro de tipo");
-   // printSimbolo(simb_esquerda_atribuicao);
    if (simb_esquerda_atribuicao->p_ref) {
       geraCodigoArmi(simb_esquerda_atribuicao->lex, simb_esquerda_atribuicao->desl);
    } else {
@@ -300,6 +305,70 @@ param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
 
 // CHAMADA PROD
 
+parte_chamada_funcao: parte_chamada_argumentos_funcao | %empty;
+
+parte_chamada_argumentos_funcao: ABRE_PARENTESES
+{
+   printf("--------------------------- args func\n");
+   imprime_pilha_s(&pilha_chamada_funcoes);
+   empilha(&pilha_args, -1);
+}
+   argumentos_funcao FECHA_PARENTESES 
+{
+   printf("CHEGAMOS AQUI\n");
+   t_simbolo* s = desempilha_s(&pilha_chamada_funcoes);
+   int n_params = desempilha(&pilha_args);
+
+   if (n_params+1 != s->num_args) imprimeErro("Numero errado de argumentos_funcao");
+   if (!s) imprimeErro("Não existe o simbolo 3");
+   if (s->cat != PROCEDIMENTO && s->cat != FUNCAO) imprimeErro("Quero um procedimento");
+   geraCodigoChamaProc(s->rotulo, nivel_lexico);
+}
+;
+
+argumentos_funcao: argumentos_funcao VIRGULA argumento_funcao
+   | argumento_funcao
+;
+
+argumento_funcao: 
+{
+   t_simbolo* s = desempilha_s(&pilha_chamada_funcoes);
+   carregou = 0;
+
+   int n = desempilha(&pilha_args);
+
+   if (s->args_list[n].p_ref)
+      eh_param = 1;
+   else
+      eh_param = 0;
+      
+   empilha_s(&pilha_chamada_funcoes, s);
+   empilha(&pilha_args, n+1);
+}
+   expressao
+{
+   t_simbolo* s = desempilha_s(&pilha_chamada_funcoes);
+   int n = desempilha(&pilha_args);
+
+   eh_param = 0;
+
+   if (guarda_tipo != s->args_list[n].tipo) imprimeErro("Tipo errado do argumento");
+
+   if (s->args_list[n].p_ref) {
+      if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
+      if (!carregou) {
+         if (guarda_simbolo->p_ref) {
+            geraCodigoCrvl(guarda_simbolo->lex, guarda_simbolo->desl);
+         } else {
+            geraCodigoCren(guarda_simbolo->lex, guarda_simbolo->desl);
+         }
+      }
+   }
+   empilha_s(&pilha_chamada_funcoes, s);
+   empilha(&pilha_args, n);
+}
+;
+
 parte_chamada_argumentos: ABRE_PARENTESES
 {
    simb_esquerda = buscaSimbolo(ident_save, nivel_lexico);
@@ -308,7 +377,7 @@ parte_chamada_argumentos: ABRE_PARENTESES
    argumentos FECHA_PARENTESES 
 {
    if (num_param+1 != simb_esquerda->num_args) imprimeErro("Numero errado de argumentos");
-   if (!simb_esquerda) imprimeErro("Não existe o simbolo");
+   if (!simb_esquerda) imprimeErro("Não existe o simbolo 3");
    if (simb_esquerda->cat != PROCEDIMENTO && simb_esquerda->cat != FUNCAO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(simb_esquerda->rotulo, nivel_lexico);
 }
@@ -425,8 +494,16 @@ F:
    | IDENT 
 {
    t_simbolo *id = buscaSimbolo(token, nivel_lexico);
-   if (!id) imprimeErro("Não existe o simbolo");
-   if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
+   if (!id) imprimeErro("Não existe o simbolo 4");
+   if (id->cat != SIMPLES 
+      && id->cat != PARAMETRO_FORMAL
+      && id->cat != FUNCAO) imprimeErro("Quero um val simples");
+
+   if (id->cat == FUNCAO) {
+      empilha_s(&pilha_chamada_funcoes, id);
+      empilha(&pilha_args, -1);
+   }
+
    empilha(&pilha_f, id->tipo);
    if (!eh_param && id->p_ref) {
       geraCodigoCrvi(id->lex, id->desl);
@@ -438,6 +515,7 @@ F:
    guarda_simbolo = id;
    eh_vs = 1;
 }
+   parte_chamada_funcao
    | ABRE_PARENTESES expressao FECHA_PARENTESES
 {
    int t = desempilha(&pilha_e);
@@ -503,6 +581,7 @@ int main (int argc, char** argv) {
    inicia_pilha(&pilha_t);
    inicia_pilha(&pilha_f);
    inicia_pilha(&pilha_args);
+   inicia_pilha_s(&pilha_chamada_funcoes);
 
    yyin=fp;
    yyparse();
