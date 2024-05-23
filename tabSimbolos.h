@@ -15,7 +15,7 @@ void addSimboloSimples(char*, int, int);
 t_simbolo* addSimboloProcedimento(char*, int, int);
 void adicionaSimboloFormal(char*, int, int, int);
 void corrigeDeslocFormal(int);
-t_simbolo* buscaSimbolo(char*);
+t_simbolo* buscaSimbolo(char*, int);
 void removeTabLex(int);
 void updateTipoSimbolo(int, int);
 void printTabSimbolo();

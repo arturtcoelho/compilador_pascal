@@ -249,6 +249,7 @@ false { simbolo = simb_false;
  }
 
 \, { simbolo = simb_virgula;
+          strncpy (lastToken, token, TAM_TOKEN);
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" virgula  ");
           return VIRGULA;
@@ -268,6 +269,7 @@ false { simbolo = simb_false;
     }
 
 \)  { simbolo = simb_fecha_parenteses;
+          strncpy (lastToken, token, TAM_TOKEN);
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" fecha_parenteses ");
           return FECHA_PARENTESES;
@@ -286,6 +288,7 @@ write { simbolo = simb_write;
 }
 
 {ident} { simbolo = simb_identificador;
+          strncpy (lastToken, token, TAM_TOKEN);
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME(" ident  ");
           return IDENT;

@@ -62,6 +62,7 @@ typedef struct simbolo {
 
 extern simbolos simbolo, relacao;
 extern char token[TAM_TOKEN];
+extern char lastToken[TAM_TOKEN];
 extern int nivel_lexico;
 extern int desloc;
 extern int nl;

@@ -16,9 +16,12 @@ t_pilha pilha_e;
 t_pilha pilha_t;
 t_pilha pilha_f;
 
+t_pilha pilha_args;
+
 t_simbolo *simb_esquerda;
 
 int pilha_rotulos = -1;
+int rotulo_main = 0;
 
 char ident_save[64];
 int num_param = 0;
@@ -48,13 +51,14 @@ bool carregou = 0;
 
 programa:
 {
-   geraCodigo (NULL, "INPP");
+   geraCodigo (NULL, " INPP");
 }
    PROGRAM IDENT parte_opcional_program PONTO_E_VIRGULA
-   bloco PONTO 
-{
-   geraCodigo (NULL, "PARA");
-}
+   bloco 
+   {
+      geraCodigo (NULL, " PARA");
+   }
+   PONTO 
 ;
 
 parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES 
@@ -64,6 +68,9 @@ parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES
 bloco:
    parte_declara_vars
    parte_declara_procedimetos
+// {
+//    geraCodigoRotulo(rotulo_main);
+// }
    comando_composto
 { 
    printTabSimbolo();
@@ -174,7 +181,7 @@ ident_solto: parte_chamada_argumentos
    | comando_atribuicao
    | %empty {
    strcpy(token, ident_save);
-   t_simbolo *id = buscaSimbolo(token);
+   t_simbolo *id = buscaSimbolo(token, nivel_lexico);
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != PROCEDIMENTO) imprimeErro("Quero um procedimento");
    geraCodigoChamaProc(id->rotulo, nivel_lexico);
@@ -185,7 +192,7 @@ ident_solto: parte_chamada_argumentos
 comando_atribuicao: 
 {
    strcpy(token, ident_save);
-   simb_esquerda = buscaSimbolo(token);
+   simb_esquerda = buscaSimbolo(token, nivel_lexico);
    if (!simb_esquerda) imprimeErro("Não existe o simbolo");
    if (simb_esquerda->cat != SIMPLES && simb_esquerda->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
 } 
@@ -193,7 +200,7 @@ comando_atribuicao:
 {
    int t = desempilha(&pilha_e);
    if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
-   printSimbolo(simb_esquerda);
+   // printSimbolo(simb_esquerda);
    if (simb_esquerda->p_ref) {
       geraCodigoArmi(simb_esquerda->lex, simb_esquerda->desl);
    } else {
@@ -217,15 +224,20 @@ declaracao_procedimeto: T_PROCEDURE IDENT
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
    simb_esquerda = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos);
    simb_esquerda->num_args = 0;
-   num_param = 0;
+   empilha(&pilha_args, 0);
 }
    opt_param_formal PONTO_E_VIRGULA 
    bloco
 {
-   geraCodigoRetProc(nivel_lexico, num_param);
+   int n = desempilha(&pilha_args);
+   geraCodigoRetProc(nivel_lexico, n);
    geraCodigoRotulo(pilha_rotulos-1);
-      
+   
    nivel_lexico--;
+
+   if (nivel_lexico == 1){
+      pilha_rotulos -= 2;
+   }
 } 
    PONTO_E_VIRGULA
 ;
@@ -245,6 +257,8 @@ lista_param_formal: lista_param_formal PONTO_E_VIRGULA parte_param_formal
 parte_param_formal:  
 {
    arg = &simb_esquerda->args_list[simb_esquerda->num_args++];
+   int n = desempilha(&pilha_args);
+   empilha(&pilha_args, n+1);
 }
    param_formal DOIS_PONTOS tipo
 {
@@ -261,7 +275,7 @@ param_formal: VAR IDENT {arg->p_ref = 1;strcpy(arg->nome, token);}
 
 parte_chamada_argumentos: ABRE_PARENTESES
 {
-   simb_esquerda = buscaSimbolo(ident_save);
+   simb_esquerda = buscaSimbolo(ident_save, nivel_lexico);
    num_param = -1;
 }
    argumentos FECHA_PARENTESES 
@@ -295,10 +309,10 @@ argumento:
       if (!carregou) {
          if (guarda_simbolo->p_ref) {
             geraCodigoCrvl(guarda_simbolo->lex, guarda_simbolo->desl);
-            printf("CRVL 2\n"); 
+            // printf("CRVL 2\n"); 
          } else {
             geraCodigoCren(guarda_simbolo->lex, guarda_simbolo->desl);
-            printf("CREN 2\n"); 
+            // printf("CREN 2\n"); 
          }
       }
    }
@@ -385,17 +399,17 @@ F:
 }
    | IDENT 
 {
-   t_simbolo *id = buscaSimbolo(token);
+   t_simbolo *id = buscaSimbolo(token, nivel_lexico);
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
    empilha(&pilha_f, id->tipo);
-   printf("CARREGA IDENT %d\n", eh_param);
+   // printf("CARREGA IDENT %d\n", eh_param);
    if (!eh_param && id->p_ref) {
       geraCodigoCrvi(id->lex, id->desl);
-      printf("CRVI\n");
+      // printf("CRVI\n");
    } else if (!eh_param) {
       geraCodigoCrvl(id->lex, id->desl);
-      printf("CRVL IDENT\n");
+      // printf("CRVL IDENT\n");
       carregou = 1;
    }
    guarda_tipo = id->tipo;
@@ -416,15 +430,22 @@ bool_val: T_TRUE | T_FALSE;
 // IO
 
 leitura: 
-   T_READ ABRE_PARENTESES IDENT 
+   T_READ ABRE_PARENTESES lista_idents_leitura FECHA_PARENTESES
+;
+
+lista_idents_leitura: lista_idents_leitura VIRGULA parte_leitura 
+   | parte_leitura 
+;
+
+parte_leitura: IDENT
 {
-   t_simbolo * s = buscaSimbolo(token);
+   t_simbolo * s = buscaSimbolo(token, nivel_lexico);
    if (s->cat != SIMPLES) imprimeErro("Tentando ler valor em simbolo nao simples");
    geraCodigoSimples("LEIT");
    geraCodigoArmz(s->lex, s->desl);
 } 
-   FECHA_PARENTESES
 ;
+
 
 escrita: T_WRITE ABRE_PARENTESES lista_write FECHA_PARENTESES
 ;
@@ -461,6 +482,7 @@ int main (int argc, char** argv) {
    inicia_pilha(&pilha_e);
    inicia_pilha(&pilha_t);
    inicia_pilha(&pilha_f);
+   inicia_pilha(&pilha_args);
 
    yyin=fp;
    yyparse();
