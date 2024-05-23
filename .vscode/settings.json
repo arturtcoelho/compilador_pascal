@@ -1,6 +1,7 @@
 {
     "files.associations": {
         ".y": "C",
-        "tabsimbolos.h": "c"
+        "tabsimbolos.h": "c",
+        "compilador.h": "c"
     }
 }

@@ -36,7 +36,7 @@ typedef enum simbolos {
 } simbolos;
 
 typedef enum tipo_simbolo {
-  SIMPLES, PROCEDIMENTO, PARAMETRO_FORMAL
+  SIMPLES, PROCEDIMENTO, PARAMETRO_FORMAL, FUNCAO, RET_FUNCAO
 } t_categoria;
 
 typedef struct args {

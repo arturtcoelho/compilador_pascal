@@ -2,11 +2,3 @@
      AMEM 1
      DSVS R00
 R01: ENPR 1
-     CRCT 1
-     ARMI 1, -4
-     RTPR 1, 1
-R00: NADA
-     CREN 0, 0
-     CHPR R01, 0
-     DMEM 1
-     PARA

@@ -18,11 +18,11 @@ void addSimboloSimples(char* token, int desloc, int lex)
     tabSim.tokens[tabSim.tam].lex = lex;
 }
 
-t_simbolo* addSimboloProcedimento(char* token, int lex, int rot)
+t_simbolo* addSimboloProcedimento(char* token, int lex, int rot, int cat)
 {
     tabSim.tam++;
     strncpy(tabSim.tokens[tabSim.tam].nome, token, TAM_TOKEN);
-    tabSim.tokens[tabSim.tam].cat = PROCEDIMENTO;
+    tabSim.tokens[tabSim.tam].cat = cat;
     tabSim.tokens[tabSim.tam].lex = lex;
     tabSim.tokens[tabSim.tam].rotulo = rot;
     return &tabSim.tokens[tabSim.tam];
@@ -36,6 +36,14 @@ void adicionaSimboloFormal(char* token, int lex, int tipo, int ref)
     tabSim.tokens[tabSim.tam].lex = lex;
     tabSim.tokens[tabSim.tam].tipo = tipo;
     tabSim.tokens[tabSim.tam].p_ref = ref;
+}
+
+void updateDeslocETipo(char* nome, int lex, int desl, int tipo, int num_args) 
+{
+    t_simbolo* s = buscaSimbolo(nome, lex);
+    s->desl = desl;
+    s->tipo = tipo;
+    s->num_args = num_args;
 }
 
 void corrigeDeslocFormal(int n)
@@ -112,6 +120,20 @@ void printTabSimbolo()
             printf("PROC | %d: %s | %d | R%02d | args: %d\n", i, 
                                                     tabSim.tokens[i].nome, 
                                                     tabSim.tokens[i].lex, 
+                                                    tabSim.tokens[i].rotulo,
+                                                    tabSim.tokens[i].num_args);
+            for (int j = 0; j < tabSim.tokens[i].num_args; j++) {
+                printf("     ARGS | %s | t: %d | ref: %d\n", tabSim.tokens[i].args_list[j].nome, 
+                                                            tabSim.tokens[i].args_list[j].tipo,
+                                                            tabSim.tokens[i].args_list[j].p_ref);
+            }
+            break;
+        case FUNCAO:  
+            printf("FUNC | %d: %s | %d, %d | t: %d | R%02d | args: %d\n", i, 
+                                                    tabSim.tokens[i].nome, 
+                                                    tabSim.tokens[i].lex, 
+                                                    tabSim.tokens[i].desl, 
+                                                    tabSim.tokens[i].tipo, 
                                                     tabSim.tokens[i].rotulo,
                                                     tabSim.tokens[i].num_args);
             for (int j = 0; j < tabSim.tokens[i].num_args; j++) {
