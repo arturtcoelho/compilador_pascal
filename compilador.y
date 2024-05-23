@@ -27,6 +27,8 @@ t_simbolo *simb_esquerda;
 
 int pilha_rotulos = -1;
 
+int num_proc = 0;
+
 char ident_save[64];
 int num_param = 0;
 t_simbolo* guarda_simbolo;
@@ -226,7 +228,8 @@ parte_declara_subrotinas: declaracao_procedimeto | declara_funcao;
 declara_funcao: T_FUNCTION IDENT
 {
    nivel_lexico++;
-   pilha_rotulos+=2;
+   pilha_rotulos+=2+num_proc*2;
+   num_proc++;
    geraCodigoDesvioS(pilha_rotulos-1);
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
    simb_esquerda_declaracao = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, FUNCAO);
@@ -244,7 +247,9 @@ bloco
    geraCodigoRetProc(nivel_lexico, n);
    geraCodigoRotulo(pilha_rotulos-1);
       
-   nivel_lexico--;
+   if (nivel_lexico == 1){
+      pilha_rotulos -= 2;
+   }
 } 
 PONTO_E_VIRGULA
 ;
@@ -252,7 +257,9 @@ PONTO_E_VIRGULA
 declaracao_procedimeto: T_PROCEDURE IDENT 
 {
    nivel_lexico++;
-   pilha_rotulos+=2;
+   pilha_rotulos+=2+num_proc*2;
+   num_proc++;
+   printf("ADD ROTULO!!!!!!!!!!!!!!!!!!1  == %d\n", pilha_rotulos);
    geraCodigoDesvioS(pilha_rotulos-1);
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
    simb_esquerda_declaracao = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, PROCEDIMENTO);
@@ -269,7 +276,7 @@ declaracao_procedimeto: T_PROCEDURE IDENT
    nivel_lexico--;
 
    if (nivel_lexico == 1){
-      pilha_rotulos -= 2;
+      pilha_rotulos -= 2+(num_proc);
    }
 } 
    PONTO_E_VIRGULA

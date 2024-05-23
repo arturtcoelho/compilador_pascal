@@ -109,7 +109,7 @@ void geraCodigoSimples(char* m)
 void geraCodigoRotulo(int n)
 {
   fprintf(fp, "R%02d: NADA\n", n); fflush(fp);
-  printf("NADA\n");
+  printf("NADA %d\n", n);
 }
 
 void geraCodigoDesvioF(int n)
