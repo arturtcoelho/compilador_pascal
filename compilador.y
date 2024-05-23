@@ -18,6 +18,8 @@ t_pilha pilha_f;
 
 t_pilha pilha_args;
 
+t_simbolo *simb_esquerda_atribuicao;
+t_simbolo *simb_esquerda_procedimento;
 t_simbolo *simb_esquerda;
 
 int pilha_rotulos = -1;
@@ -68,9 +70,6 @@ parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES
 bloco:
    parte_declara_vars
    parte_declara_procedimetos
-// {
-//    geraCodigoRotulo(rotulo_main);
-// }
    comando_composto
 { 
    printTabSimbolo();
@@ -192,19 +191,19 @@ ident_solto: parte_chamada_argumentos
 comando_atribuicao: 
 {
    strcpy(token, ident_save);
-   simb_esquerda = buscaSimbolo(token, nivel_lexico);
-   if (!simb_esquerda) imprimeErro("Não existe o simbolo");
-   if (simb_esquerda->cat != SIMPLES && simb_esquerda->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
+   simb_esquerda_atribuicao = buscaSimbolo(token, nivel_lexico);
+   if (!simb_esquerda_atribuicao) imprimeErro("Não existe o simbolo");
+   if (simb_esquerda_atribuicao->cat != SIMPLES && simb_esquerda_atribuicao->cat != PARAMETRO_FORMAL) imprimeErro("Impossivel atribuir");
 } 
    ATRIBUICAO expressao
 {
    int t = desempilha(&pilha_e);
-   if (simb_esquerda->tipo != t) imprimeErro("Erro de tipo");
-   // printSimbolo(simb_esquerda);
-   if (simb_esquerda->p_ref) {
-      geraCodigoArmi(simb_esquerda->lex, simb_esquerda->desl);
+   if (simb_esquerda_atribuicao->tipo != t) imprimeErro("Erro de tipo");
+   // printSimbolo(simb_esquerda_atribuicao);
+   if (simb_esquerda_atribuicao->p_ref) {
+      geraCodigoArmi(simb_esquerda_atribuicao->lex, simb_esquerda_atribuicao->desl);
    } else {
-      geraCodigoArmz(simb_esquerda->lex, simb_esquerda->desl);
+      geraCodigoArmz(simb_esquerda_atribuicao->lex, simb_esquerda_atribuicao->desl);
    }
 }
 ;
@@ -309,10 +308,8 @@ argumento:
       if (!carregou) {
          if (guarda_simbolo->p_ref) {
             geraCodigoCrvl(guarda_simbolo->lex, guarda_simbolo->desl);
-            // printf("CRVL 2\n"); 
          } else {
             geraCodigoCren(guarda_simbolo->lex, guarda_simbolo->desl);
-            // printf("CREN 2\n"); 
          }
       }
    }
@@ -403,13 +400,10 @@ F:
    if (!id) imprimeErro("Não existe o simbolo");
    if (id->cat != SIMPLES && id->cat != PARAMETRO_FORMAL) imprimeErro("Quero um val simples");
    empilha(&pilha_f, id->tipo);
-   // printf("CARREGA IDENT %d\n", eh_param);
    if (!eh_param && id->p_ref) {
       geraCodigoCrvi(id->lex, id->desl);
-      // printf("CRVI\n");
    } else if (!eh_param) {
       geraCodigoCrvl(id->lex, id->desl);
-      // printf("CRVL IDENT\n");
       carregou = 1;
    }
    guarda_tipo = id->tipo;
@@ -457,8 +451,6 @@ lista_write: lista_write VIRGULA parte_imprimivel
 parte_imprimivel: 
    expressao 
 {geraWrite();} 
-   /* | NUMERO
-{geraWriteConstante();} */
 ;
 
 %%
