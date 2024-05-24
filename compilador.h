@@ -21,7 +21,7 @@
 typedef char bool;
 
 typedef enum simbolos {
-  simb_program, simb_var, simb_begin, simb_end,
+  simb_program, simb_var, simb_type, simb_begin, simb_end,
   simb_identificador, simb_numero,
   simb_ponto, simb_virgula, simb_ponto_e_virgula, simb_dois_pontos,
   simb_atribuicao, simb_abre_parenteses, simb_fecha_parenteses,
@@ -36,7 +36,7 @@ typedef enum simbolos {
 } simbolos;
 
 typedef enum tipo_simbolo {
-  SIMPLES, PROCEDIMENTO, PARAMETRO_FORMAL, FUNCAO, RET_FUNCAO
+  SIMPLES, PROCEDIMENTO, PARAMETRO_FORMAL, FUNCAO, RET_FUNCAO, TIPO
 } t_categoria;
 
 typedef struct args {
@@ -95,6 +95,10 @@ void geraWriteConstante();
 
 void comparaTipos(t_pilha*, t_pilha*);
 void comparaTiposBool(t_pilha*, t_pilha*);
+
+int geraTipoCustom(int, int);
+
+void checkErroTipo(int, int);
 
 int imprimeErro ( char* erro );
 

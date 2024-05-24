@@ -58,6 +58,12 @@ var      { simbolo = simb_var;
           return VAR;
  }
 
+type      { simbolo = simb_type;
+          strncpy (token, yytext, TAM_TOKEN);
+          IMPRIME("type  ");
+          return TYPE;
+ }
+
 begin { simbolo = simb_begin;
           strncpy (token, yytext, TAM_TOKEN);
           IMPRIME("begin ");

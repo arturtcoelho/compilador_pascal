@@ -30,6 +30,8 @@ int pilha_rotulos = -1;
 int num_proc = 0;
 
 char ident_save[64];
+char save_type[64];
+
 int num_param = 0;
 t_simbolo* guarda_simbolo;
 t_arg* arg;
@@ -39,11 +41,15 @@ bool eh_vs = 0;
 bool eh_ref = 0;
 bool carregou = 0;
 
+bool tipo_custom = 0;
+
+int num_tipos_custom = 0;
+
 %}
 
 %token PROGRAM ABRE_PARENTESES FECHA_PARENTESES
 %token VIRGULA PONTO_E_VIRGULA DOIS_PONTOS PONTO
-%token T_BEGIN T_END VAR IDENT ATRIBUICAO NUMERO
+%token T_BEGIN T_END VAR TYPE IDENT ATRIBUICAO NUMERO
 %token T_PROCEDURE T_FUNCTION 
 %token T_WHILE T_DO 
 %token T_IF T_THEN T_ELSE
@@ -72,20 +78,38 @@ parte_opcional_program: ABRE_PARENTESES lista_idents FECHA_PARENTESES
 ;
 
 bloco:
+   parte_declara_tipo
    parte_declara_vars
    parte_declara_varias_subrotinas
    comando_composto
 { 
    printTabSimbolo();
-   geraCodigoDmem(nivel_lexico);
+   geraCodigoDmem(nivel_lexico, num_tipos_custom);
    removeTabLex(nivel_lexico);
+}
+;
+
+// DECLARA TIPOS
+
+parte_declara_tipo:
+   TYPE declara_tipos
+   | %empty
+;
+
+declara_tipos: declara_tipos declara_tipo PONTO_E_VIRGULA
+   | declara_tipo PONTO_E_VIRGULA
+;
+
+declara_tipo: IDENT {strcpy(save_type, token);} T_IGUAL tipo_declaracao
+{
+   addTipo(save_type, simbolo, nivel_lexico, geraTipoCustom(++num_tipos_custom, simbolo));
 }
 ;
 
 // DECLARA VARS
 
 parte_declara_vars: 
-{deslocamento = 0;} 
+{deslocamento = 0;}
    VAR declara_vars
    | %empty
 ;
@@ -96,19 +120,39 @@ declara_vars: declara_vars declara_var
 
 declara_var : 
 {num_vars = 0;}
-   lista_id_var DOIS_PONTOS tipo {updateTipoSimbolo(simbolo, num_vars);}
-{geraCodigoAmem(num_vars);}
+   lista_id_var DOIS_PONTOS tipo_declaracao 
+{
+   if (tipo_custom) {
+      t_simbolo *s = buscaSimbolo(token, nivel_lexico);
+      simbolo = s->desl;
+   }
+   updateTipoSimbolo(simbolo, num_vars);
+   geraCodigoAmem(num_vars);
+}
    PONTO_E_VIRGULA
 ;
 
-tipo: T_INTEGER 
-   | T_BOOL
+tipo_declaracao: T_INTEGER {tipo_custom = 0;}
+   | T_BOOL {tipo_custom = 0;}
+   | IDENT {tipo_custom = 1;}
+;
+
+tipo: T_INTEGER {tipo_custom = 0;}
+   | T_BOOL {tipo_custom = 0;}
+   | IDENT {tipo_custom = 1;}
 ;
 
 lista_id_var: 
-   lista_id_var VIRGULA IDENT
-{addSimboloSimples(token, deslocamento, nivel_lexico);num_vars++; deslocamento++; }
-   | IDENT {addSimboloSimples(token, deslocamento, nivel_lexico);num_vars++; deslocamento++;}
+   lista_id_var VIRGULA ident_declara_var
+   | ident_declara_var 
+;
+
+ident_declara_var: IDENT
+{
+   addSimboloSimples(token, deslocamento, nivel_lexico);
+   num_vars++; 
+   deslocamento++; 
+}
 ;
 
 lista_idents: lista_idents VIRGULA IDENT
@@ -142,7 +186,8 @@ comando:
 comando_if: T_IF expressao 
 {
    int t = desempilha(&pilha_e);
-   if (t != simb_bool) imprimeErro("Erro de tipo na avaliação IF");
+   checkErroTipo(t, simb_bool);
+   // if (t != simb_bool) imprimeErro("Erro de tipo na avaliação IF");
 
    pilha_rotulos+=2;
    geraCodigoDesvioF(pilha_rotulos-1);
@@ -174,7 +219,7 @@ comando_while:
    expressao T_DO 
 {
    int t = desempilha(&pilha_e);
-   if (t != simb_bool) imprimeErro("Erro de tipo na avaliação IF");
+   checkErroTipo(t, simb_bool);
    geraCodigoDesvioF(pilha_rotulos);
 }
    comando
@@ -214,7 +259,8 @@ comando_atribuicao:
    ATRIBUICAO expressao
 {
    int t = desempilha(&pilha_e);
-   if (simb_esquerda_atribuicao->tipo != t) imprimeErro("Erro de tipo");
+   checkErroTipo(simb_esquerda_atribuicao->tipo, t);
+   // if (simb_esquerda_atribuicao->tipo != t) imprimeErro("Erro de tipo");
    if (simb_esquerda_atribuicao->p_ref) {
       geraCodigoArmi(simb_esquerda_atribuicao->lex, simb_esquerda_atribuicao->desl);
    } else {
@@ -266,7 +312,6 @@ declaracao_procedimeto: T_PROCEDURE IDENT
    nivel_lexico++;
    pilha_rotulos+=2+num_proc*2;
    num_proc++;
-   printf("ADD ROTULO!!!!!!!!!!!!!!!!!!1  == %d\n", pilha_rotulos);
    geraCodigoDesvioS(pilha_rotulos-1);
    geraCodigoEntraProc(pilha_rotulos, nivel_lexico);
    simb_esquerda_declaracao = addSimboloProcedimento(token, nivel_lexico, pilha_rotulos, PROCEDIMENTO);
@@ -309,6 +354,10 @@ parte_param_formal:
 }
    param_formal DOIS_PONTOS tipo
 {
+   if (tipo_custom) {
+      t_simbolo *s = buscaSimbolo(token, nivel_lexico);
+      simbolo = s->desl;
+   }
    arg->tipo = simbolo;
    adicionaSimboloFormal(arg->nome, nivel_lexico, simbolo, arg->p_ref);
 }
@@ -415,7 +464,8 @@ argumento:
    expressao
 {
    eh_ref = 0;
-   if (guarda_tipo != simb_esquerda->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
+   checkErroTipo(guarda_tipo, simb_esquerda->args_list[num_param].tipo);
+   // if (guarda_tipo != simb_esquerda->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
    if (simb_esquerda->args_list[num_param].p_ref) {
       if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
       if (!carregou) {

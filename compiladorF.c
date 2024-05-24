@@ -53,10 +53,10 @@ void geraCodigoAmem(int n)
   printf("AMEM\n");
 }
 
-void geraCodigoDmem(int lex) {
+void geraCodigoDmem(int lex, int offset) {
   int n = contaTabSimb(lex);
-  if (n <=0) return;
-  fprintf(fp, "     DMEM %d\n", n); fflush(fp);
+  if (n-offset <=0) return;
+  fprintf(fp, "     DMEM %d\n", n-offset); fflush(fp);
   printf("DMEM\n");
 }
 
@@ -176,10 +176,8 @@ void comparaTipos(t_pilha* a, t_pilha* b)
   int t2 = desempilha(b);
   // printf("%d, %d\n", t1, t2);
   // printf("%s\n", token);
-  if (t1 == t2)
-    empilha(a, t1);
-  else
-    imprimeErro("Erro tipos");
+  checkErroTipo(t1, t2);
+  empilha(a, t1);
 }
 
 void comparaTiposBool(t_pilha* a, t_pilha* b)
@@ -188,8 +186,28 @@ void comparaTiposBool(t_pilha* a, t_pilha* b)
   int t1 = desempilha(a);
   int t2 = desempilha(b);
   // printf("%d, %d\n", t1, t2);
+  checkErroTipo(t1, t2);
+  empilha(a, simb_bool);
+}
+
+int geraTipoCustom(int n, int base)
+{
+    return (n+1)*base*13;
+}
+
+void checkErroTipo(int t1, int t2)
+{
+  printf("===COMPARA TIPOS===: %d / %d\n", t1, t2);
   if (t1 == t2)
-    empilha(a, simb_bool);
-  else
-    imprimeErro("Erro tipos bool");
+    return;
+
+  double d = (double) t1/t2;
+  int i = t1/t2;
+  if (d == i) return;
+
+  d = (double) t2/t1;
+  i = t2/t1;
+  if (d == i) return;
+  
+  imprimeErro("Erro de tipo na avaliação ESPECIAL");
 }

@@ -46,6 +46,16 @@ void updateDeslocETipo(char* nome, int lex, int desl, int tipo, int num_args)
     s->num_args = num_args;
 }
 
+void addTipo(char* nome, int simb, int lex, int num)
+{
+    tabSim.tam++;
+    strncpy(tabSim.tokens[tabSim.tam].nome, nome, TAM_TOKEN);
+    tabSim.tokens[tabSim.tam].cat = TIPO;
+    tabSim.tokens[tabSim.tam].lex = lex;
+    tabSim.tokens[tabSim.tam].tipo = simb;
+    tabSim.tokens[tabSim.tam].desl = num;
+}
+
 void corrigeDeslocFormal(int n)
 {
     int count = -4;
@@ -153,6 +163,13 @@ void printTabSimbolo()
                                                 tabSim.tokens[i].tipo,
                                                 tabSim.tokens[i].p_ref);
             break;
+        case TIPO:
+            printf("TIPO | %d: %s | %d | type: %d/%d\n", i,
+                                                tabSim.tokens[i].nome, 
+                                                tabSim.tokens[i].lex, 
+                                                tabSim.tokens[i].tipo, 
+                                                tabSim.tokens[i].desl);
+            break;
         default:
             break;
         }
@@ -205,6 +222,14 @@ void printSimbolo(t_simbolo* sim)
                                                 sim->tipo,
                                                 sim->p_ref);
             break;
+        case TIPO:
+            printf("TIPO | %s | %d | type: %d/%d\n",
+                                                sim->nome, 
+                                                sim->lex, 
+                                                sim->tipo,
+                                                sim->desl);
+            break;
+
         default:
             break;
         }
