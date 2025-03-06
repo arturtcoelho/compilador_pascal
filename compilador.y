@@ -124,6 +124,7 @@ declara_var :
 {
    if (tipo_custom) {
       t_simbolo *s = buscaSimbolo(token, nivel_lexico);
+      if (!s) imprimeErro("Não existe o tipo");
       simbolo = s->desl;
    }
    updateTipoSimbolo(simbolo, num_vars);
@@ -254,13 +255,11 @@ comando_atribuicao:
    if (simb_esquerda_atribuicao->cat != SIMPLES 
       && simb_esquerda_atribuicao->cat != PARAMETRO_FORMAL
       && simb_esquerda_atribuicao->cat != FUNCAO) imprimeErro("Impossivel atribuir");
-   // printf("CHEGAMOS AQUI\n");
 } 
    ATRIBUICAO expressao
 {
    int t = desempilha(&pilha_e);
    checkErroTipo(simb_esquerda_atribuicao->tipo, t);
-   // if (simb_esquerda_atribuicao->tipo != t) imprimeErro("Erro de tipo");
    if (simb_esquerda_atribuicao->p_ref) {
       geraCodigoArmi(simb_esquerda_atribuicao->lex, simb_esquerda_atribuicao->desl);
    } else {
@@ -399,7 +398,6 @@ argumento_funcao:
 
    int n = desempilha(&pilha_args);
 
-   printf("REFERENCIA? ? ? %d | n = %d", s->args_list[n].p_ref, n);
    if (s->args_list[n+1].p_ref)
       eh_ref = 1;
    else
@@ -417,7 +415,7 @@ argumento_funcao:
 
    eh_ref = 0;
 
-   if (guarda_tipo != s->args_list[n].tipo) imprimeErro("Tipo errado do argumento :(");
+   checkErroTipo(guarda_tipo, s->args_list[n].tipo)
 
    if (s->args_list[n].p_ref) {
       if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
@@ -465,7 +463,6 @@ argumento:
 {
    eh_ref = 0;
    checkErroTipo(guarda_tipo, simb_esquerda->args_list[num_param].tipo);
-   // if (guarda_tipo != simb_esquerda->args_list[num_param].tipo) imprimeErro("Tipo errado do argumento");
    if (simb_esquerda->args_list[num_param].p_ref) {
       if (!eh_vs) imprimeErro("Argumento por ref deve ser uma variavel");
       if (!carregou) {
